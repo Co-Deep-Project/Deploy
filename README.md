@@ -4,6 +4,13 @@
 ## Co-Deep Project backend
 - FastAPI 서버 실행 명령: `uvicorn backend.server:app --reload`
 
+## 기존과 다른 점
+- 원래 서버가 3개였음.<br>
+① backend/server.py<br>
+② Frontend/co-deep-frontend(Final)/src/seoin/server1.js<br>
+③ Frontend/co-deep-frontend(Final)/src/seoin/server2.js <br>
+근데 나중에 배포하고 유지보수하기 쉽게 서버를 하나로 합쳐야될 것 같아서 backend/server.py 로 합침
+
 ## 앞으로 해야될 것
 - server.py 서버 로직 바꿔야됨.
 - 현재 문제 <br>
