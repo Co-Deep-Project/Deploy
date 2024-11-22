@@ -1,0 +1,100 @@
+.card-profile {
+  width: 700px;
+  padding: 20px;
+  padding-top: 50px;
+  height: auto;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Arial', sans-serif;
+  margin: 0 auto; /* 중앙 정렬 */
+}
+
+.profile-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row; /* 데스크톱에서는 가로 배치 */
+  align-items: flex-start;
+  gap: 10px; /* 이미지와 텍스트 사이 간격 */
+}
+
+.left {
+  flex: 1; /* 남은 공간을 채우도록 설정 */
+}
+
+.right {
+  flex-shrink: 0; /* 이미지 영역의 크기 고정 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-name {
+  font-size: 1.8em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.profile-details {
+  margin: 5px 0;
+  font-size: 1em;
+  line-height: 1.5;
+}
+
+.profile-image {
+  width: 180px;
+  height: 250px;
+  object-fit: cover;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+}
+
+.button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  background-color: rgb(190, 162, 218);
+  color: black;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+  @media (max-width: 767px) {
+    .card-profile {
+      max-width: 100%;
+      padding: 10px;
+    }
+  
+    .profile-details {
+      font-size: 14px; /* 폰트 크기 축소 */
+      line-height: 1.2; /* 줄 간격 축소 */
+    }
+  
+    .profile-image {
+      width: 120px; /* 이미지 크기 축소 */
+      height: 160px;
+    }
+  
+
+    .button-container {
+      flex-direction: row; /* 버튼을 가로로 배치 */
+      justify-content: center; /* 버튼을 가운데 정렬 */
+      gap: 10px;
+    }
+  
+    .button {
+      width: auto; /* 버튼 너비를 자동으로 설정하여 내용에 맞춤 */
+      padding: 8px; /* 모바일에서 버튼 패딩 축소 */
+      font-size: 14px; /* 버튼 폰트 크기 축소 */
+    }
+  }

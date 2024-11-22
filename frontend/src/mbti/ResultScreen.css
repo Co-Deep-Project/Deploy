@@ -1,0 +1,105 @@
+/* 전체 결과 화면 */
+.result-container {
+  background: #121212; /* 검은 배경 */
+  color: #fff; /* 텍스트 색상 */
+  padding: 30px;
+  border-radius: 15px;
+  width: 500px;
+  max-height: auto;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6); /* 그림자 추가 */
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+}
+
+/* 헤더 영역 */
+.result-header {
+  background: #8455b3; /* 연한 보라색 배경 */
+  color: #fff; /* 흰색 텍스트 */
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.result-header h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.result-header p {
+  font-size: 1.2rem;
+  margin-top: 10px;
+}
+
+/* 성향 설명 섹션 */
+.result-description {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #ece5f9; /* 연한 라벤더 배경 */
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #333;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 신문 추천 설명 */
+.newspaper-description {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f9f6ff; /* 좀 더 연한 배경색 */
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #444;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 뉴스 헤드라인 섹션 */
+.news-headlines {
+  margin-top: 20px;
+}
+
+.news-headlines h3 {
+  font-size: 1.2rem;
+  color: #eee;
+  margin-bottom: 15px;
+}
+
+.headlines-list .headline {
+  background: #333;
+  padding: 5px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s ease;
+  text-align: left;
+}
+
+.headlines-list .headline:hover {
+  transform: translateY(-2px);
+  background: #444;
+}
+
+.headlines-list .headline.selected {
+  background: #8455b3; /* 선택된 뉴스 강조 */
+  color: #fff;
+}
+
+/* 버튼 스타일 */
+.result-actions .restart-button {
+  background-color: #8455b3;
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s ease;
+}
+
+.result-actions .restart-button:hover {
+  background-color: #6d3ca6;
+}

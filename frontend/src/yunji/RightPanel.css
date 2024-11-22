@@ -1,0 +1,70 @@
+.right-panel {
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0; /* 상단 패딩을 완전히 제거하여 위로 밀어 올림 */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: auto; /* 기본적으로 높이 자동 조정 */
+  box-sizing: border-box;
+  overflow-y: hidden; /* 기본적으로 스크롤 숨김 */
+}
+.panel-title {
+  font-size: 1.2em;
+  margin-bottom: 5px; /* 패널 제목과 드롭다운 사이의 여백을 최소화 */
+}
+
+
+/* 드롭다운 스타일 - 연보라색 테마 */
+.dropdown {
+  width: 220px;
+  padding: 8px 12px; /* 드롭다운 높이를 줄이기 위해 패딩 감소 */
+  font-size: 1em;
+  margin-bottom: 10px; /* 드롭다운과 그래프 사이의 여백을 줄임 */
+  border: 2px solid #B39DDB;
+  border-radius: 8px;
+  background-color: #F3E5F5;
+  color: #333;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23664d9d' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.dropdown:hover {
+  background-color: #E1BEE7;
+  border-color: #9575CD;
+}
+
+.dropdown:focus {
+  border-color: #8977a7;
+  box-shadow: 0px 0px 5px rgba(149, 117, 205, 0.5);
+}
+
+/* 히스토그램 스타일 */
+.chart-container {
+  width: 100%;
+  height: 160px; /* 히스토그램 높이를 약간 줄임 */
+  margin-top: 1px; /* 드롭다운과 그래프 사이의 여백을 더 줄임 */
+  flex: 1;
+}
+
+
+/* 작은 화면에서는 스크롤이 생기도록 */
+@media (max-width: 600px) {
+  .right-panel {
+    height: auto; /* 모바일에서 높이 자동 조정 */
+    overflow-y: auto; /* 스크롤 활성화 */
+  }
+
+  .chart-container {
+    height: auto; /* 차트 높이를 자동으로 조정 */
+    margin-top: 10px; /* 차트 상단 여백 추가 */
+  }
+}
