@@ -1,0 +1,222 @@
+/* 전체 배경 */
+.desktop {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 110px;
+  overflow-x: hidden;
+}
+
+/* 로고 */
+.navigation-bar .POLITRACKER {
+  position: fixed;
+  top: 30px;
+  left: 3.5vw;
+  width: 1vw;
+  max-width: 50px; 
+  min-width: 50px; 
+  height: auto; 
+}
+
+/* "객관적 정보, 주체적 판단" 슬로건 */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+.header .p {
+  font-weight: bold;
+  line-height: 1.5;
+  font-size: clamp(30px, 2vw, 60px)
+}
+
+.heading-subheading .label {
+  color: #ffffff;
+  padding: 5px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.heading-subheading .div {
+  line-height: 1.5;
+  font-size: clamp(16px, 1vw, 20px);
+  color: #1a1a1a;
+}
+
+/* "서비스" 섹션 */
+.heading-subheading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+/* 카드 섹션 */
+.overlap-2 {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 5vw;
+  margin-top: 20px;
+  flex-direction: row;
+}
+
+/* 화면 크기가 px 이하일 때 */
+@media (max-width: 767px) {
+  /* "객관적 정보, 주체적 판단" 슬로건 */
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    right: 3vw;
+}
+
+  .overlap-2 {
+    flex-direction: row; /* 작은 화면에서는 세로로 정렬 */
+    gap: 25px; /* 카드 사이 간격 조절 */
+    align-items: center;
+  }
+  
+  .card, .card-2, .card-3 {
+    width: 16vw; /* 카드 크기 조정 */
+    height: auto;
+  }
+}
+
+.card, .card-2, .card-3 {
+  width: 19vw; /* 화면 너비의 25%로 설정하여 반응형 크기 조정 */
+  height: 16vh; /* 화면 높이의 20%로 설정하여 반응형 크기 조정 */
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2vh 2vw; /* 카드 내부 패딩도 상대적인 단위로 설정 */
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+
+.card {
+  background-color: #1a1a1a;
+  color: #1a1a1a;
+}
+
+.card-2 {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.card-3 {
+  background-color: #cfc2e9;
+  color: #333;
+}
+
+/* 카드 내부 텍스트 및 링크 */
+.label-3 {
+  background-color: #ffffff;
+  padding: 1vh 1.5vw; /* 상대적인 단위로 조정 */
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+  line-height: 1.5;
+  font-size: clamp(12px, 1.2vw, 20px)
+}
+
+.heading-and-link {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%; /* 부모 카드의 높이를 채움 */
+  padding: 5px 0; /* 위아래 여백 조정 */
+  margin-bottom: 5px;
+}
+
+.link {
+  display: flex;
+  align-items: center; /* 세로 정렬을 중앙으로 맞춤 */
+  gap: 20px; /* 아이콘과 텍스트 사이의 간격 */
+  flex-direction: row;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 3px;
+}
+
+.icon, .arrow-wrapper {
+  width: 2vw; /* 상대적인 단위로 아이콘 크기 설정 */
+  height: 2vw; /* 상대적인 단위로 아이콘 크기 설정 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+.label-4 {
+  color: #ffffff;
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: bold;
+  transition: color 0.2s ease; /* 부드러운 색상 전환 효과 */
+}
+
+.label-5 {
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: bold;
+  color: #1a1a1a;
+  transition: color 0.2s ease; /* 부드러운 색상 전환 효과 */
+}
+
+.label-6 {
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: bold;
+  color: #1a1a1a;
+  transition: color 0.3s ease; 
+}
+
+.label-4:hover, .label-5:hover{
+  color: #cfc2e9; /* 원하는 색상으로 변경 */
+}
+
+.label-6:hover {
+  color: #ffffff
+}
+
+/* 하단 정보 */
+.element-trackerskku-g {
+  position: fixed;
+  bottom: 35px;
+  text-align: center;
+  line-height: 1.35;
+  font-size: 14px;
+  color: #333;
+  margin-top: 10px;
+}
+
+/* 텍스트 애니메이션 */
+.text-animated {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.25s forwards ease-in-out;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

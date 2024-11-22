@@ -1,0 +1,420 @@
+/* 기본 스타일 */
+.app {
+  font-family: Arial, sans-serif;
+  color: #333;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 헤더 스타일 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  position: relative;
+  background-color: transparent;
+}
+
+.logo-container {
+  position: absolute;
+  top: 5px;
+  left: 20px;
+}
+
+.poliLogo {
+  width: 250px;
+  height: auto;
+  max-width: 100%; /* 화면 너비 초과 방지 */
+}
+
+.menu {
+  display: flex;
+  position: absolute;
+  top: 5px;
+  right: 40px; /* 위치 조정 */
+  gap: 10px;
+  align-items: center;
+}
+
+.menu span {
+  font-size: 1em;
+  color: #333;
+}
+
+.menu button {
+  font-size: 1em;
+  padding: 6px 16px;
+  border: 1px solid #333;
+  background-color: transparent;
+  color: #333;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  line-height: 1.35;
+}
+
+.footer p {
+  font-size: 13px;
+}
+.menu button:hover {
+  background-color: #e0e0e0;
+}
+
+/* 메인 콘텐츠 레이아웃 */
+.main-content {
+  display: flex;
+  flex-direction: row;
+  height: 100%; /* 높이를 100%로 설정하여 부모 높이에 맞춤 */
+  overflow: visible; /* 필요 시에만 스크롤을 보이도록 변경 */
+}
+
+.left-panel,
+.right-panel {
+  flex: 1;
+  padding: 20px;
+  overflow: visible; /* 스크롤 제거하여 모두 보이도록 설정 */
+  box-sizing: border-box;
+}
+/* 정책 카드 스타일 */
+.action-cards {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.action-card {
+  width: 100%;
+  padding: 0;
+}
+
+.btn {
+  width: 100%;
+  font-size: 1.5em;
+  color: black;
+  height: 80px;
+  font-weight: bold;
+  border: 2px solid #000;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+  text-align: left;
+}
+.btn:hover {
+  background-color: #e0e0e0;
+}
+.complete {
+  background-color: #00D355;
+}
+
+.inProgress {
+  background-color: #ECFF21;
+}
+
+.notStarted {
+  background-color: #FF0000;
+}
+
+.policy-list {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  flex-direction: column;
+}
+
+.policy-item {
+  padding: 5px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.policy-item span {
+  cursor: pointer;
+}
+
+/* 타임라인 스타일 */
+.timeline {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  text-align: center;
+}
+
+.timeline h3 {
+  margin-top: 0;
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.timeline-container {
+  position: relative;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ccc;
+  z-index: 1;
+}
+
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-marker {
+  width: 12px;
+  height: 12px;
+  background-color: #ccc;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.timeline-date {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.timeline-text {
+  font-size: 0.85em;
+  color: #555;
+  margin: 0;
+  margin-top: 4px;
+}
+
+/* 프로필 카드 스타일 */
+.card-profile {
+  width: 700px;
+  padding: 20px;
+  height: auto;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.profile-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.profile-details {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.right {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-image {
+  width: 180px;
+  height: 300px;
+  object-fit: cover;
+  margin-bottom: 20px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  background-color: rgb(190, 162, 218);
+  color: black;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+ /* Ellipse34 */
+  
+ p {
+  margin: 0;
+}
+
+.circle-container {
+  display: flex;
+  align-items: center; /* 원과 텍스트 수직 중앙 정렬 */
+  gap: 8px; /* 원과 텍스트 사이의 간격 */
+}
+
+.grey-circle {
+  width: 31px;
+  height: 30px;
+  border-radius: 50%; /* 원형 모양 */
+  background-color: rgba(217, 217, 217, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.green-circle {
+  width: 18px;
+  height: 18px; /* 높이와 너비를 동일하게 설정 */
+  border-radius: 50%; /* 완전한 원 모양 */
+  background-color: rgba(185, 255, 102, 1);
+}
+
+.circle-text {
+  font-size: 1em;
+  color: #333; /* 텍스트 색상 */
+  font-weight: bold;
+}
+.category {
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.category-title {
+  font-size: 1.5em; /* 글자 크기 확대 */
+  font-weight: bold;
+  color: #000; /* 텍스트 색상 검정 */
+  background-color: #b9ff66; /* 밝은 녹색 배경 */
+  padding: 10px 20px; /* 상하좌우 여백 */
+  border-radius: 10px; /* 둥근 테두리 */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+  text-align: center; /* 텍스트 가운데 정렬 */
+  display: inline-block; /* 요소 크기를 텍스트에 맞춤 */
+  border: 2px solid #000; /* 검정색 테두리 추가 */
+}
+
+.category-items {
+  display: flex;
+  gap: 10px;
+}
+
+.category .item {
+  background: #e0ffe0;
+  padding: 10px;
+  border-radius: 20px;
+  font-size: 1em;
+  color: #4a4a4a;
+  text-align: center;
+}
+
+/* 반응형 설정 */
+@media (max-width: 767px) {
+  .main-content {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .left-panel, .right-panel {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .header {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .poliLogo {
+    width: 150px;
+    max-width: 100%;
+  }
+
+  .menu {
+    position: absolute;
+    top: 5px;
+    right: 20px; /* 위치 조정 */
+    gap: 8px;
+    align-items: center;
+  }
+
+  .menu span,
+  .menu button {
+    font-size: 0.9em;
+  }
+
+  .card-profile {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .profile-details {
+    font-size: 16px;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .profile-image {
+    width: 120px;
+    height: 200px;
+    margin-bottom: 10px;
+  }
+
+  .button-container {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .btn {
+    font-size: 1.2em;
+    height: 60px;
+  }
+
+  .policy-list {
+    padding: 5px 10px;
+  }
+
+  .policy-item {
+    padding: 3px 0;
+  }
+
+  .timeline h3 {
+    font-size: 1.1em;
+  }
+
+  .timeline-date,
+  .timeline-text {
+    font-size: 0.8em;
+  }
+}

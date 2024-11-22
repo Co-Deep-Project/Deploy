@@ -1,0 +1,13 @@
+/* 전체 컨테이너 */
+.mbti-container {
+  font-family: "Noto Sans KR", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle, #0f0f0f, #181818 80%);
+  color: #ffffff;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
