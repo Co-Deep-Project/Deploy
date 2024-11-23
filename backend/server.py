@@ -37,9 +37,6 @@ class QueryRequest(BaseModel):
 
 
 async def preload_data():
-    """
-    서버 시작 시 데이터 미리 로드.
-    """
     global vote_data_loaded, bills_data_loaded
 
     print("Preloading vote and bill data...")
