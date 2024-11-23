@@ -2,11 +2,10 @@
 
 node_modules/
 
-.env.local
-frontend/.env.local
+__pycache__
+
+.env
 
 build/
 
 myenv/
-
-backend/__pycache__

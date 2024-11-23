@@ -1,34 +1,85 @@
 import os
 import sys
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi import Query
-import requests 
+import requests
+import asyncio
+from cachetools import TTLCache
 from dotenv import load_dotenv
 
+# .env 파일 로드
 load_dotenv()
 
+# OpenAPI Key
 API_KEY = os.getenv("API_KEY")
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
+# FastAPI 설정
 app = FastAPI()
 
+# 시스템 경로 추가 (chatbot_data.py와 연결)
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],  # 모든 도메인 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# 캐싱 (10분 유지)
+cache = TTLCache(maxsize=100, ttl=600)
+
+# 데이터 로드 상태 플래그
+vote_data_loaded = False
+bills_data_loaded = False
+
+
 class QueryRequest(BaseModel):
     query: str
 
+
+# 기존 chatbot_data.py에서 가져온 함수
 from .chatbot_data import search_news, generate_response, format_news_results
 
-# 뉴스 검색
+
+### 데이터 미리 로드 (서버 시작 시) ###
+async def preload_data():
+    """
+    서버 시작 시 데이터 미리 로드.
+    """
+    global vote_data_loaded, bills_data_loaded
+
+    print("Preloading vote and bill data...")
+
+    # 의안 투표 데이터 캐싱
+    try:
+        cache["votes"] = await fetch_vote_data("곽상언")
+        vote_data_loaded = True
+    except Exception as e:
+        print(f"Error preloading vote data: {e}")
+
+    # 발의 법률 데이터 캐싱
+    try:
+        cache["bills"] = await fetch_bills("곽상언")
+        bills_data_loaded = True
+    except Exception as e:
+        print(f"Error preloading bills data: {e}")
+
+    print("Preloading completed.")
+
+
+# FastAPI 이벤트: 서버 시작 시 호출
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(preload_data())  # 비동기 데이터 로드
+
+
+### 엔드포인트 정의 ###
+
+# 뉴스 검색 API
 @app.post("/search_news")
 async def search_news_endpoint(request: QueryRequest):
     keyword = request.query.replace("뉴스", "").strip()
@@ -38,7 +89,8 @@ async def search_news_endpoint(request: QueryRequest):
     formatted_results = format_news_results(news_results)
     return {"response": formatted_results}
 
-# GPT 질문 처리
+
+# GPT API 처리
 @app.post("/ask_gpt")
 async def ask_gpt_endpoint(request: QueryRequest):
     try:
@@ -47,7 +99,8 @@ async def ask_gpt_endpoint(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 통합 챗봇 엔드포인트
+
+# 통합 챗봇 API
 @app.post("/chatbot")
 async def chatbot_endpoint(request: QueryRequest):
     user_query = request.query.lower()
@@ -58,11 +111,21 @@ async def chatbot_endpoint(request: QueryRequest):
         return {"response": formatted_results}
     return {"response": generate_response(user_query)}
 
-# 의안 투표 데이터 (server1.js 기능)
+
+# 의안 투표 데이터 API
 @app.get("/api/vote_data")
 async def fetch_vote_data(member_name: str = Query(..., description="Name of the member")):
+    """
+    의안 투표 데이터를 가져오고 캐싱.
+    """
     vote_url = "https://open.assembly.go.kr/portal/openapi/nojepdqqaweusdfbi"
     bill_list_url = "https://open.assembly.go.kr/portal/openapi/nwbpacrgavhjryiph"
+
+    # 캐싱된 데이터가 있으면 반환
+    if "votes" in cache:
+        print(f"Returning cached vote data for {member_name}")
+        return cache["votes"]
+
     try:
         # Step 1: 의안 ID 가져오기 (페이지네이션 추가)
         print(f"Fetching bill IDs for member: {member_name}")
@@ -89,12 +152,11 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
                 for row in rows:
                     if "BILL_ID" in row:
                         bill_ids.append(row["BILL_ID"])
-                pIndex += 1  # 다음 페이지로 이동
+                pIndex += 1
             else:
-                print("No more rows found in the response for BILL_IDs.")
-                has_more_data = False  # 데이터가 없으면 종료
+                has_more_data = False
 
-        print("Retrieved BILL_IDs:", bill_ids)  # 디버깅 출력
+        print("Retrieved BILL_IDs:", bill_ids)
 
         # Step 2: 의안별 투표 데이터 가져오기
         vote_data = []
@@ -116,7 +178,8 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
             ):
                 vote_data.extend(response["nojepdqqaweusdfbi"][1]["row"])
 
-        print("Final vote data:", vote_data)  # 디버깅 출력
+        print("Final vote data:", vote_data)
+        cache["votes"] = vote_data  # 캐싱
         return vote_data
 
     except Exception as e:
@@ -124,11 +187,19 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-# 발의 법률 데이터 (server2.js 기능)
+# 발의 법률 데이터 API
 @app.get("/api/bills")
 async def fetch_bills(member_name: str = Query(..., description="Name of the member")):
+    """
+    발의 법률 데이터를 가져오고 캐싱.
+    """
     bills_url = "https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn"
+
+    # 캐싱된 데이터가 있으면 반환
+    if "bills" in cache:
+        print(f"Returning cached bills data for {member_name}")
+        return cache["bills"]
+
     try:
         response = requests.get(bills_url, params={
             "Key": API_KEY,
@@ -148,7 +219,9 @@ async def fetch_bills(member_name: str = Query(..., description="Name of the mem
             }
             for item in response.get("nzmimeepazxkubdpn", [])[1].get("row", [])
         ]
+
+        cache["bills"] = bills  # 캐싱
         return bills
     except Exception as e:
+        print(f"Error in fetch_bills: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
