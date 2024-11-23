@@ -13,7 +13,7 @@
 ③ Frontend/co-deep-frontend(Final)/src/seoin/server2.js <br>
 근데 나중에 배포하고 유지보수하기 쉽게 서버를 하나로 합쳐야될 것 같아서 backend/server.py 로 합침
 
-## 앞으로 해야될 것
+## 수정해야되는 부분
 - 국회의원 페이지 "의안 투표 추적" 부분에서 찬성, 반대, 기권 버튼 누르면 그것에 해당하는 의안들만 나올 수 있도록 하는 것도 좋을 것 같음.
 - server.py 서버 로직 바꿔야됨.
 - 현재 문제 <br>
