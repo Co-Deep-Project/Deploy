@@ -81,7 +81,7 @@ def format_news_results(filtered_news):
     :return: 포맷팅된 텍스트
     """
     if not filtered_news:
-        print("필터링된 결과가 없습니다.")  # 디버깅용 출력
+        #print("필터링된 결과가 없습니다.")  # 디버깅용 출력
         return "검색 결과를 찾을 수 없습니다."
     
     formatted_results = []
@@ -89,7 +89,7 @@ def format_news_results(filtered_news):
         title = html.unescape(item['title']).replace("<b>", "").replace("</b>", "")
         description = html.unescape(item['description']).replace("<b>", "").replace("</b>", "")
         link = item['originallink']
-        formatted_results.append(f"제목: {title}\n설명: {description}\n링크: {link}\n")
+        formatted_results.append(f"제목: {title}\n링크: {link}\n")
     
     return "\n".join(formatted_results)
 
