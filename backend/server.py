@@ -37,6 +37,9 @@ class QueryRequest(BaseModel):
 
 
 async def preload_data():
+    """
+    서버 시작 시 데이터 미리 로드.
+    """
     global vote_data_loaded, bills_data_loaded
 
     print("Preloading vote and bill data...")
@@ -188,7 +191,8 @@ async def fetch_bills(member_name: str = Query(..., description="Name of the mem
                 "bill_name": item.get("BILL_NAME"),
                 "propose_date": item.get("PROPOSE_DT"),
                 "committee": item.get("COMMITTEE"),
-                "proposer": item.get("PROPOSER")
+                "proposer": item.get("PROPOSER"),
+                "co_proposer": item.get("PUBL_PROPOSER")
             }
             for item in response.get("nzmimeepazxkubdpn", [])[1].get("row", [])
         ]

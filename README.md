@@ -1,10 +1,13 @@
 # Co-Deep Project Frontend
-`npm start`로 실행됨.
-
-실행 경로 : `cd Frontend`
+- 실행 경로 : `cd frontend`
+- `npm start`로 실행됨.
 
 ## Co-Deep Project backend
+
+- python 가상환경 실행 `source myenv/bin/activate`
 - FastAPI 서버 실행 명령: `uvicorn backend.server:app --reload`
+
+
 
 ## 기존과 다른 점
 - 원래 서버가 3개였음.<br>

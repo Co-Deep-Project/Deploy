@@ -16,7 +16,8 @@ const Seoin = () => {
   const memberName = "곽상언";
 
   // FastAPI 서버 URL (환경 변수에서 가져옴)
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  
 
   const fetchVotesFromServer = async () => {
     setVotesLoading(true);
@@ -37,19 +38,22 @@ const Seoin = () => {
   const fetchBillsFromServer = async () => {
     setBillsLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills?member_name=${memberName}`);
-      const data = await response.json();
-      // 최신순 정렬
-      const sortedBills = data.sort((a, b) => new Date(b.propose_date) - new Date(a.propose_date));
-      setBills(sortedBills);
-      if (activeTab === "bills") {
-        setDisplayData(sortedBills.slice(0, ITEMS_PER_PAGE));
-      }
+        console.log(`Fetching bills for ${memberName}`); 
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills?member_name=${memberName}`);
+        const data = await response.json();
+
+        // 최신순 정렬
+        const sortedBills = data.sort((a, b) => new Date(b.propose_date) - new Date(a.propose_date));
+        setBills(sortedBills);
+        if (activeTab === "bills") {
+            setDisplayData(sortedBills.slice(0, ITEMS_PER_PAGE));
+        }
     } catch (error) {
-      console.error("서버 요청 오류:", error);
+        console.error("서버 요청 오류:", error);
     }
     setBillsLoading(false);
-  };
+};
+
   
 
   const handleTabChange = (tab) => {
@@ -201,7 +205,7 @@ const Seoin = () => {
             })
           ) : (
             displayData.map((bill, index) => {
-              const displayNumber = bills.length - index; // 내림차순 번호
+              const displayNumber = bills.length - index; 
               return (
                 <div key={index} className="bill-card">
                   <div className="bill-header">
@@ -215,6 +219,7 @@ const Seoin = () => {
                     <div className="bill-details">
                       <p>제안일자: {bill.propose_date}</p>
                       <p>제안자: {bill.proposer}</p>
+                      <p>공동발의자: {bill.co_proposer}</p>
                       <p>의안 번호: {bill.bill_id}</p>
                       <p>소관위원회: {bill.committee}</p>
                     </div>
