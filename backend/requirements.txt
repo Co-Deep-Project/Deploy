@@ -4,3 +4,4 @@ python-dotenv
 cachetools
 requests
 openai
+beautifulsoup4

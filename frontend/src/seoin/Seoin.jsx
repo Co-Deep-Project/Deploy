@@ -188,16 +188,26 @@ const Seoin = () => {
                 >
                   <div className="vote-header">
                     <span>{displayNumber}</span>
-                    <span>{vote.BILL_NAME}</span>
+                    <a href={vote.BILL_URL} target="_blank" rel="noopener noreferrer">{vote.BILL_NAME}</a>
                     <button onClick={() => toggleExpand(index)}>
                       {expanded[index] ? "-" : "+"}
                     </button>
                   </div>
                   {expanded[index] && (
                     <div className="vote-details">
-                      <p>의안 번호: {vote.BILL_NO}</p>
-                      <p>의결일자: {vote.VOTE_DATE}</p>
-                      <p>소관위원회: {vote.CURR_COMMITTEE}</p>
+                      <p><span className="bold">• 의안 번호 : </span> {vote.BILL_NO}</p>
+                      <p><span className="bold">• 의결일자 : </span> {vote.VOTE_DATE}</p>
+                      <p><span className="bold">• 소관위원회 : </span> {vote.CURR_COMMITTEE}</p>
+                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <br />
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html: vote.DETAILS
+                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
+                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                        }}
+                      ></p>
+
                     </div>
                   )}
                 </div>
@@ -210,18 +220,27 @@ const Seoin = () => {
                 <div key={index} className="bill-card">
                   <div className="bill-header">
                     <span>{displayNumber}</span>
-                    <span>{bill.bill_name}</span>
+                    <a href={bill.bill_url} target="_blank" rel="noopener noreferrer">{bill.bill_name}</a>
                     <button onClick={() => toggleExpand(index)}>
                       {expanded[index] ? "-" : "+"}
                     </button>
                   </div>
                   {expanded[index] && (
                     <div className="bill-details">
-                      <p>제안일자: {bill.propose_date}</p>
-                      <p>제안자: {bill.proposer}</p>
-                      <p>공동발의자: {bill.co_proposer}</p>
-                      <p>의안 번호: {bill.bill_id}</p>
-                      <p>소관위원회: {bill.committee}</p>
+                      <p><span className="bold">• 제안일자 : </span> {bill.propose_date}</p>
+                      <p><span className="bold">• 제안자 : </span> {bill.proposer}</p>
+                      <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
+                      <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p>
+                      <p><span className="bold">• 소관위원회 : </span> {bill.committee}</p>
+                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <br />
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html: bill.DETAILS
+                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
+                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                        }}
+                      ></p>
                     </div>
                   )}
                 </div>

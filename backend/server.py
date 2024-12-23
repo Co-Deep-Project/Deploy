@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,9 +8,13 @@ import requests
 import asyncio
 from cachetools import TTLCache
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 from .chatbot_data import search_news, generate_response, format_news_results
 
 load_dotenv()
+
+# 캐싱 (10분 유지)
+cache = TTLCache(maxsize=100, ttl=600)
 
 API_KEY = os.getenv("API_KEY")
 
@@ -24,9 +29,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# 캐싱 (10분 유지)
-cache = TTLCache(maxsize=100, ttl=600)
 
 vote_data_loaded = False
 bills_data_loaded = False
@@ -98,6 +100,32 @@ async def chatbot_endpoint(request: QueryRequest):
     return {"response": generate_response(user_query)}
 
 
+
+def crawl_bill_details(bill_id):
+    """
+    주어진 BILL_ID에 대해 '제안이유 및 주요내용'을 크롤링하고, 불필요한 부분을 제거합니다.
+    """
+    url = f"https://likms.assembly.go.kr/bill/summaryPopup.do?billId={bill_id}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        # BeautifulSoup을 이용해 HTML 파싱
+        soup = BeautifulSoup(response.text, 'html.parser')
+        content_div = soup.find("div", class_="textType02 mt30")
+
+        if content_div:
+            # HTML 내용을 텍스트로 변환하며 <br/>을 \n로 변환
+            raw_html = content_div.decode_contents()
+            text_with_newlines = raw_html.replace("<br/>", "\n").strip()
+            return BeautifulSoup(text_with_newlines, 'html.parser').get_text()
+        else:
+            return "내용을 찾을 수 없습니다."
+    except Exception as e:
+        print(f"Error while crawling BILL_ID {bill_id}: {e}")
+        return "크롤링 중 오류 발생."
+
+
 # 의안 투표 데이터 API
 @app.get("/api/vote_data")
 async def fetch_vote_data(member_name: str = Query(..., description="Name of the member")):
@@ -156,9 +184,12 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
                 and len(response["nojepdqqaweusdfbi"]) > 1
                 and "row" in response["nojepdqqaweusdfbi"][1]
             ):
-                vote_data.extend(response["nojepdqqaweusdfbi"][1]["row"])
+                for vote in response["nojepdqqaweusdfbi"][1]["row"]:
+                    bill_details = crawl_bill_details(vote["BILL_ID"])
+                    vote["DETAILS"] = bill_details
+                    vote_data.append(vote)
 
-        print("Final vote data:", vote_data)
+        print("Final vote data with details:", vote_data)
         cache["votes"] = vote_data
         return vote_data
 
@@ -185,17 +216,22 @@ async def fetch_bills(member_name: str = Query(..., description="Name of the mem
             "PROPOSER": member_name,
             "AGE": "22"
         }).json()
-        bills = [
-            {
-                "bill_id": item.get("BILL_NO"),
+        bills = []
+
+        for item in response.get("nzmimeepazxkubdpn", [])[1].get("row", []):
+            bill_id = item.get("BILL_ID")  # BILL_ID 사용
+            bill_details = crawl_bill_details(bill_id)  # BILL_ID로 크롤링
+            bills.append({
+                "bill_no" : item.get("BILL_NO"),
+                "bill_url" : item.get("DETAIL_LINK"),
+                "bill_id": bill_id,
                 "bill_name": item.get("BILL_NAME"),
                 "propose_date": item.get("PROPOSE_DT"),
                 "committee": item.get("COMMITTEE"),
                 "proposer": item.get("PROPOSER"),
-                "co_proposer": item.get("PUBL_PROPOSER")
-            }
-            for item in response.get("nzmimeepazxkubdpn", [])[1].get("row", [])
-        ]
+                "co_proposer": item.get("PUBL_PROPOSER"),
+                "DETAILS": bill_details  # DETAILS 필드 추가
+            })
 
         cache["bills"] = bills 
         return bills
