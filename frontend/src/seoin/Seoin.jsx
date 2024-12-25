@@ -188,7 +188,15 @@ const Seoin = () => {
                 >
                   <div className="vote-header">
                     <span>{displayNumber}</span>
-                    <a href={vote.BILL_URL} target="_blank" rel="noopener noreferrer">{vote.BILL_NAME}</a>
+                    <a 
+                        href={vote.BILL_URL} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="tooltip-link"
+                      >
+                        {vote.BILL_NAME}
+                        <span className="tooltip">클릭하면 상세정보로 이동합니다.</span>
+                      </a>
                     <button onClick={() => toggleExpand(index)}>
                       {expanded[index] ? "-" : "+"}
                     </button>
@@ -220,7 +228,15 @@ const Seoin = () => {
                 <div key={index} className="bill-card">
                   <div className="bill-header">
                     <span>{displayNumber}</span>
-                    <a href={bill.bill_url} target="_blank" rel="noopener noreferrer">{bill.bill_name}</a>
+                    <a 
+                      href={bill.bill_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="tooltip-link"
+                    >
+                      {bill.bill_name}
+                      <span className="tooltip">클릭하면 상세정보로 이동합니다.</span>
+                    </a>
                     <button onClick={() => toggleExpand(index)}>
                       {expanded[index] ? "-" : "+"}
                     </button>
