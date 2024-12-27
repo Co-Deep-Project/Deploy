@@ -1,4 +1,7 @@
 fastapi
 uvicorn
+python-dotenv
+cachetools
 requests
 openai
+beautifulsoup4

@@ -16,7 +16,8 @@ const Seoin = () => {
   const memberName = "곽상언";
 
   // FastAPI 서버 URL (환경 변수에서 가져옴)
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  
 
   const fetchVotesFromServer = async () => {
     setVotesLoading(true);
@@ -37,19 +38,22 @@ const Seoin = () => {
   const fetchBillsFromServer = async () => {
     setBillsLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills?member_name=${memberName}`);
-      const data = await response.json();
-      // 최신순 정렬
-      const sortedBills = data.sort((a, b) => new Date(b.propose_date) - new Date(a.propose_date));
-      setBills(sortedBills);
-      if (activeTab === "bills") {
-        setDisplayData(sortedBills.slice(0, ITEMS_PER_PAGE));
-      }
+        console.log(`Fetching bills for ${memberName}`); 
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills?member_name=${memberName}`);
+        const data = await response.json();
+
+        // 최신순 정렬
+        const sortedBills = data.sort((a, b) => new Date(b.propose_date) - new Date(a.propose_date));
+        setBills(sortedBills);
+        if (activeTab === "bills") {
+            setDisplayData(sortedBills.slice(0, ITEMS_PER_PAGE));
+        }
     } catch (error) {
-      console.error("서버 요청 오류:", error);
+        console.error("서버 요청 오류:", error);
     }
     setBillsLoading(false);
-  };
+};
+
   
 
   const handleTabChange = (tab) => {
@@ -184,16 +188,34 @@ const Seoin = () => {
                 >
                   <div className="vote-header">
                     <span>{displayNumber}</span>
-                    <span>{vote.BILL_NAME}</span>
+                    <a 
+                        href={vote.BILL_URL} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="tooltip-link"
+                      >
+                        {vote.BILL_NAME}
+                        <span className="tooltip">클릭하면 상세정보로 이동합니다.</span>
+                      </a>
                     <button onClick={() => toggleExpand(index)}>
                       {expanded[index] ? "-" : "+"}
                     </button>
                   </div>
                   {expanded[index] && (
                     <div className="vote-details">
-                      <p>의안 번호: {vote.BILL_NO}</p>
-                      <p>의결일자: {vote.VOTE_DATE}</p>
-                      <p>소관위원회: {vote.CURR_COMMITTEE}</p>
+                      <p><span className="bold">• 의안 번호 : </span> {vote.BILL_NO}</p>
+                      <p><span className="bold">• 의결일자 : </span> {vote.VOTE_DATE}</p>
+                      <p><span className="bold">• 소관위원회 : </span> {vote.CURR_COMMITTEE}</p>
+                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <br />
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html: vote.DETAILS
+                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
+                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                        }}
+                      ></p>
+
                     </div>
                   )}
                 </div>
@@ -201,22 +223,40 @@ const Seoin = () => {
             })
           ) : (
             displayData.map((bill, index) => {
-              const displayNumber = bills.length - index; // 내림차순 번호
+              const displayNumber = bills.length - index; 
               return (
                 <div key={index} className="bill-card">
                   <div className="bill-header">
                     <span>{displayNumber}</span>
-                    <span>{bill.bill_name}</span>
+                    <a 
+                      href={bill.bill_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="tooltip-link"
+                    >
+                      {bill.bill_name}
+                      <span className="tooltip">클릭하면 상세정보로 이동합니다.</span>
+                    </a>
                     <button onClick={() => toggleExpand(index)}>
                       {expanded[index] ? "-" : "+"}
                     </button>
                   </div>
                   {expanded[index] && (
                     <div className="bill-details">
-                      <p>제안일자: {bill.propose_date}</p>
-                      <p>제안자: {bill.proposer}</p>
-                      <p>의안 번호: {bill.bill_id}</p>
-                      <p>소관위원회: {bill.committee}</p>
+                      <p><span className="bold">• 제안일자 : </span> {bill.propose_date}</p>
+                      <p><span className="bold">• 제안자 : </span> {bill.proposer}</p>
+                      <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
+                      <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p>
+                      <p><span className="bold">• 소관위원회 : </span> {bill.committee}</p>
+                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <br />
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html: bill.DETAILS
+                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
+                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                        }}
+                      ></p>
                     </div>
                   )}
                 </div>

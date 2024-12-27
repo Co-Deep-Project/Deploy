@@ -41,6 +41,10 @@ const Desktop = () => {
     navigate("/select-region"); // Navigate to the Select Region page
   };
 
+  const navigateToChatbot = () => {
+    navigate("/chatbot");
+  };
+
   return (
     <div className="desktop">
       {/* header section */}
@@ -118,14 +122,14 @@ const Desktop = () => {
             <div className="heading">
               <div className="label">
                 <div className="label-3">
-                  낯선 정치 용어
+                  정치 용어 및 뉴스
                   <br />
-                  알아보기
+                  물어보기
                 </div>
               </div>
             </div>
             <br></br>
-            <div className="link">
+            <div className="link" onClick={navigateToChatbot} style={{ cursor: "pointer" }}>
               <div className="arrow-wrapper">
                 <img className="arrow" src={arrow1} alt="Arrow" />
               </div>
