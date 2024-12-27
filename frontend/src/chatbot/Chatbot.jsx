@@ -1,50 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Chatbot.css";
 
 const Chatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]); 
-  const [inputValue, setInputValue] = useState(""); 
+  const [isOpen, setIsOpen] = useState(false); // 챗봇 열림/닫힘 상태
+  const [messages, setMessages] = useState([]); // 챗봇 메시지 상태
+  const [inputValue, setInputValue] = useState(""); // 채팅 입력 상태
+  const [news, setNews] = useState([]); // 뉴스 데이터 상태
 
-  const toggleChatbot = () => setIsOpen(!isOpen); 
+  const toggleChatbot = () => setIsOpen(!isOpen); // 챗봇 열기/닫기
 
+  // Mock 뉴스 데이터
+  useEffect(() => {
+    setNews([
+      {
+        id: 1,
+        title: "뉴스 1: 최신 선거 정보",
+        description: "다음 선거에 관한 주요 뉴스를 확인하세요.",
+      },
+      {
+        id: 2,
+        title: "뉴스 2: 새로운 법안 발의",
+        description: "최근 경제 법안 발의와 그 영향.",
+      },
+      {
+        id: 3,
+        title: "뉴스 3: 청년 취업 지원 프로그램",
+        description: "청년층 대상 취업 지원 프로그램 확대 소식.",
+      },
+      {
+        id: 4,
+        title: "뉴스 4: 트래커스꾸 창업 성공",
+        description: "성균관대학교 코딥 프로젝트에서 뭉친 트래커스꾸가 개발한 politracker 대성공하다",
+      },
+    ]);
+  }, []);
+
+  // 챗봇 메시지 전송
   const handleSend = async () => {
-    console.log("API URL:", `${process.env.REACT_APP_BACKEND_URL}/chatbot`);
-
     if (inputValue.trim() === "") return;
 
     const userMessage = { sender: "user", text: inputValue };
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/chatbot`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: inputValue }),
-        });
-      
+      const response = await fetch("http://localhost:8000/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: inputValue }),
+      });
 
-        const data = await response.json();
-        const botMessage = { sender: "bot", text: data.response };
-        setMessages((prev) => [...prev, botMessage]);
+      const data = await response.json();
+      const botMessage = { sender: "bot", text: data.response };
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-        console.error("Error communicating with chatbot:", error);
-        const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다." };
-        setMessages((prev) => [...prev, errorMessage]);
+      console.error("Error communicating with chatbot:", error);
+      const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다." };
+      setMessages((prev) => [...prev, errorMessage]);
     }
 
-    setInputValue(""); 
+    setInputValue(""); // 입력 초기화
   };
-
 
   return (
     <div className="chatbot-container">
+      {/* 뉴스 섹션 */}
+      <div className="news-container">
+  <h1 className="news-header">최신 뉴스</h1>
+  <div className="news-cards">
+    {news.map((item) => (
+      <div key={item.id} className="news-card">
+        <h2 className="news-title">{item.title}</h2>
+        <p className="news-description">{item.description}</p>
+        <a href="#!" className="news-button">더 보기</a> {/* 링크 추가 */}
+      </div>
+    ))}
+  </div>
+</div>
+
+
+      {/* 챗봇 버튼 */}
       {!isOpen && (
         <div className="chatbot-button" onClick={toggleChatbot}>
           💬
         </div>
       )}
 
+      {/* 챗봇 창 */}
       {isOpen && (
         <div className="chatbot-window">
           <div className="chatbot-header">
