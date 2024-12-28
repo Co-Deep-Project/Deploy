@@ -167,7 +167,12 @@ const Seoin = () => {
                 <span className="legend-item legend-against">반대</span>
                 <span className="legend-item legend-abstain">기권</span>
               </div>)
-          }
+          } {activeTab === "bills" && (
+            <div className="legend-container">
+              <span className="legend-item legend-approve">대표발의 의안</span>
+              <span className="legend-item legend-against">공동발의 의안</span>
+            </div>
+          )}
           {isLoading ? (
             <p>데이터를 불러오는 중...</p>
           ) : displayData.length === 0 ? (
@@ -225,11 +230,16 @@ const Seoin = () => {
             displayData.map((bill, index) => {
               const displayNumber = bills.length - index; 
               return (
-                <div key={index} className="bill-card">
+                <div
+                key={index}
+                className={`bill-card ${
+                  bill.type === "대표발의" ? "approve" : "against"
+                }`}
+                >
                   <div className="bill-header">
                     <span>{displayNumber}</span>
                     <a 
-                      href={bill.bill_url} 
+                      href={bill.bill_link} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="tooltip-link"

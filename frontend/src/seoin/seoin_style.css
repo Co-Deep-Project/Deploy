@@ -236,6 +236,15 @@ a {
   background-color: #cfc2e9;
 }
 
+.bill-card.approve {
+  background-color: #cfc2e9;
+}
+
+.bill-card.against {
+  background-color: #c5c5c592;
+}
+
+
 .vote-header,
 .bill-header {
   display: flex;
