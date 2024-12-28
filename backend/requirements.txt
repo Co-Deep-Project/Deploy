@@ -5,3 +5,5 @@ cachetools
 requests
 openai
 beautifulsoup4
+webdriver-manager
+selenium

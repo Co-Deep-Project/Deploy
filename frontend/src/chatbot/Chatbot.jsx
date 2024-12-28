@@ -47,6 +47,7 @@ const Chatbot = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: inputValue }),
+        
       });
 
       const data = await response.json();
@@ -54,7 +55,7 @@ const Chatbot = () => {
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Error communicating with chatbot:", error);
-      const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다." };
+      const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요." };
       setMessages((prev) => [...prev, errorMessage]);
     }
 

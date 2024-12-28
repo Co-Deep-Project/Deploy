@@ -9,6 +9,11 @@ import asyncio
 from cachetools import TTLCache
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+import time
 from .chatbot_data import search_news, generate_response, format_news_results
 
 load_dotenv()
@@ -55,7 +60,7 @@ async def preload_data():
 
     # 발의 법률 데이터 캐싱
     try:
-        cache["bills"] = await fetch_bills("곽상언")
+        cache["bills"] = await fetch_bills_combined("곽상언")
         bills_data_loaded = True
     except Exception as e:
         print(f"Error preloading bills data: {e}")
@@ -198,17 +203,69 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 발의 법률 데이터 API
-@app.get("/api/bills")
-async def fetch_bills(member_name: str = Query(..., description="Name of the member")):
-    bills_url = "https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn"
+def fetch_collab_bills_with_selenium():
+    url = "https://www.assembly.go.kr/portal/assm/assmPrpl/prplMst.do?monaCd=FIE6569O&st=22&viewType=CONTBODY&tabId=collabill"
 
-    if "bills" in cache:
-        print(f"Returning cached bills data for {member_name}")
-        return cache["bills"]
-
+    # ChromeDriver를 자동으로 관리
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")  # 브라우저 숨김 모드
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    
     try:
-        response = requests.get(bills_url, params={
+        driver.get(url)
+        time.sleep(3)  # 페이지 로드 대기
+        
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        tbody = soup.find("tbody", id="prpl_cont__collabill__list")
+        
+        collab_bills = []
+        if tbody:
+            for tr in tbody.find_all("tr"):
+                a_tag = tr.find("td", class_="align_left td_block").find("a")
+                if a_tag and a_tag.has_attr("href"):
+                    bill_link = a_tag["href"].strip()
+                    bill_name = a_tag.get_text(strip=True)
+                    match = re.search(r"billId=([^&]+)", bill_link)
+                    bill_id = match.group(1) if match else None
+                else:
+                    bill_link = None
+                    bill_name = None
+                    bill_id = None
+
+                proposer = tr.find("td", class_="list__proposer").get_text(strip=True) if tr.find("td", class_="list__proposer") else None
+                committee = tr.find("td", class_="board_text", attrs={"class": "list__currCommittee"}).get_text(strip=True) if tr.find("td", class_="board_text", attrs={"class": "list__currCommittee"}) else None
+                propose_date = tr.find("td", class_="list__proposeDt").get_text(strip=True) if tr.find("td", class_="list__proposeDt") else None
+
+                collab_bills.append({
+                    "type": "공동발의",
+                    "bill_id": bill_id,
+                    "bill_name": bill_name,
+                    "bill_link": bill_link,
+                    "proposer": proposer,
+                    "committee": committee,
+                    "propose_date": propose_date
+                })
+        else:
+            print("No tbody found in the page source.")
+        return collab_bills
+    finally:
+        driver.quit()
+
+@app.get("/api/bills_combined")
+async def fetch_bills_combined(member_name: str = Query(..., description="Name of the member")):
+    """
+    '곽상언' 의원이 대표발의한 법률안과 공동발의로 포함된 법률안을
+    한 번에 반환합니다.
+    """
+    # 대표발의 법률 데이터 가져오기
+    bills_url = "https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+    }
+    try:
+        response = requests.get(bills_url, headers=headers, params={
             "Key": API_KEY,
             "Type": "json",
             "pIndex": 1,
@@ -219,22 +276,38 @@ async def fetch_bills(member_name: str = Query(..., description="Name of the mem
         bills = []
 
         for item in response.get("nzmimeepazxkubdpn", [])[1].get("row", []):
-            bill_id = item.get("BILL_ID")  # BILL_ID 사용
-            bill_details = crawl_bill_details(bill_id)  # BILL_ID로 크롤링
+            bill_id = item.get("BILL_ID")
+            bill_details = crawl_bill_details(bill_id)
             bills.append({
-                "bill_no" : item.get("BILL_NO"),
-                "bill_url" : item.get("DETAIL_LINK"),
+                "type": "대표발의",
+                "bill_no": item.get("BILL_NO"),
+                "bill_url": item.get("DETAIL_LINK"),
                 "bill_id": bill_id,
                 "bill_name": item.get("BILL_NAME"),
                 "propose_date": item.get("PROPOSE_DT"),
                 "committee": item.get("COMMITTEE"),
                 "proposer": item.get("PROPOSER"),
                 "co_proposer": item.get("PUBL_PROPOSER"),
-                "DETAILS": bill_details  # DETAILS 필드 추가
+                "DETAILS": bill_details
             })
-
-        cache["bills"] = bills 
-        return bills
     except Exception as e:
-        print(f"Error in fetch_bills: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching bills: {e}")
+        bills = []
+
+    # 공동발의 법률 데이터 가져오기
+    try:
+        collab_bills = fetch_collab_bills_with_selenium()
+
+                # 공동발의 법률안에 DETAILS 추가
+        for bill in collab_bills:
+            if bill["bill_id"]:  # bill_id가 존재하는 경우에만 crawl_bill_details 호출
+                bill["DETAILS"] = crawl_bill_details(bill["bill_id"])
+            else:
+                bill["DETAILS"] = "상세 정보가 제공되지 않았습니다."
+    except Exception as e:
+        print(f"Error fetching collab bills: {e}")
+        collab_bills = []
+
+    combined_bills = bills + collab_bills
+    print(f"{combined_bills}")
+    return combined_bills

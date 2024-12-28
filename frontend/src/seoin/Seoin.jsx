@@ -39,7 +39,7 @@ const Seoin = () => {
     setBillsLoading(true);
     try {
         console.log(`Fetching bills for ${memberName}`); 
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills?member_name=${memberName}`);
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills_combined?member_name=${memberName}`);
         const data = await response.json();
 
         // 최신순 정렬
@@ -245,8 +245,8 @@ const Seoin = () => {
                     <div className="bill-details">
                       <p><span className="bold">• 제안일자 : </span> {bill.propose_date}</p>
                       <p><span className="bold">• 제안자 : </span> {bill.proposer}</p>
-                      <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
-                      <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p>
+                      {/* <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
+                      <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p> */}
                       <p><span className="bold">• 소관위원회 : </span> {bill.committee}</p>
                       <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
                       <br />
