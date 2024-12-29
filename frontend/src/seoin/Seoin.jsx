@@ -22,8 +22,10 @@ const Seoin = () => {
   const fetchVotesFromServer = async () => {
     setVotesLoading(true);
     try {
+      console.log("Fetching votes from:", `${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);  // URL 확인
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);
       const data = await response.json();
+      console.log("Received vote data:", data); 
       setVotes(data);
       if (activeTab === "votes") {
         setDisplayData(data.slice(0, ITEMS_PER_PAGE));
@@ -211,13 +213,15 @@ const Seoin = () => {
                       <p><span className="bold">• 의안 번호 : </span> {vote.BILL_NO}</p>
                       <p><span className="bold">• 의결일자 : </span> {vote.VOTE_DATE}</p>
                       <p><span className="bold">• 소관위원회 : </span> {vote.CURR_COMMITTEE}</p>
-                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <p><span className="bold">• 제안이유 및 주요내용 요약: </span></p>
                       <br />
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: vote.DETAILS
-                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
-                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                          __html: vote.DETAILS.summary
+                            ? vote.DETAILS.summary
+                                .replace(/\n{2,3}/g, '\n')
+                                .replace(/\n/g, '<br/>')
+                            : "내용이 없습니다."
                         }}
                       ></p>
 
@@ -258,13 +262,15 @@ const Seoin = () => {
                       {/* <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
                       <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p> */}
                       <p><span className="bold">• 소관위원회 : </span> {bill.committee}</p>
-                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <p><span className="bold">• 제안이유 및 주요내용 요약: </span></p>
                       <br />
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: bill.DETAILS
-                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
-                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                          __html: bill.DETAILS.summary  
+                            ? bill.DETAILS.summary
+                                .replace(/\n{2,3}/g, '\n')
+                                .replace(/\n/g, '<br/>')
+                            : "내용이 없습니다."
                         }}
                       ></p>
                     </div>
