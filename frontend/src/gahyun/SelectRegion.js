@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import geojson from "../lib/data/seoul_map.json";
 import districtsJson from "../lib/data/seoul_districts.json"; // 동 정보가 포함된 JSON 파일
 import "./SelectRegion.css";
@@ -7,7 +7,10 @@ import centerData from "../lib/data/seoul_gu_centers.json";
 
 const SelectRegion = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const KAKAO_API_KEY = process.env.REACT_APP_KAKAO_API_KEY;
+
+    const goBackButtonRef = useRef(null);
 
     useEffect(() => {
         const script = document.createElement("script");
@@ -185,12 +188,13 @@ const SelectRegion = () => {
 
                 // "구 다시 선택하기" 버튼 추가
                 const addGoBackButton = () => {
-                    if (!goBackButton) {
-                        goBackButton = document.createElement("button");
-                        goBackButton.innerText = "구 다시 선택하기";
-                        goBackButton.className = "back-button";
-                        goBackButton.onclick = () => resetToRegions();
-                        document.body.appendChild(goBackButton);
+                    if (!goBackButtonRef.current) {
+                        const button = document.createElement("button");
+                        button.innerText = "구 다시 선택하기";
+                        button.className = "back-button";
+                        button.onclick = () => resetToRegions();
+                        document.body.appendChild(button);
+                        goBackButtonRef.current = button; // 버튼을 goBackButtonRef에 저장
                     }
                 };
 
@@ -198,13 +202,14 @@ const SelectRegion = () => {
                 const resetToRegions = () => {
                     dongPolygons.forEach((p) => p.setMap(null));
                     dongPolygons = [];
-
-                    infowindow.close(); // 인포윈도우 닫기
+                    infowindow.close();
                     map.setCenter(new window.kakao.maps.LatLng(37.566826, 126.9786567));
-                    map.setLevel(9); // 초기 확대 레벨로 복원
+                    map.setLevel(9);
 
-                    goBackButton.remove();
-                    goBackButton = null;
+                    if (goBackButtonRef.current) {
+                        goBackButtonRef.current.remove(); // 버튼 삭제
+                        goBackButtonRef.current = null; // 참조 초기화
+                    }
 
                     geojson.features.forEach((feature) => {
                         const coordinates = feature.geometry.coordinates[0];
@@ -222,7 +227,21 @@ const SelectRegion = () => {
         };
 
         document.head.appendChild(script);
+
+        return () => {
+            if (goBackButtonRef.current) {
+                goBackButtonRef.current.remove();
+                goBackButtonRef.current = null;
+            }
+        };
     }, [navigate]);
+
+    useEffect(() => {
+        if (location.pathname !== "/selectregion" && goBackButtonRef.current) {
+            goBackButtonRef.current.remove();
+            goBackButtonRef.current = null;
+        }
+    }, [location]);
 
     return (
         <div className="container">
