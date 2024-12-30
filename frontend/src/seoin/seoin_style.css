@@ -347,6 +347,19 @@ a {
   font-size: 14px;
 }
 
+/*차트 관련*/
+.chart-container {
+  text-align: center;
+  margin: 20px auto;
+  margin-bottom: 60px;
+}
+
+.chart-container h2 {
+  margin-bottom: 20px;
+  font-size: 1.5em;
+  color: #333;
+}
+
 /* 반응형 - 모바일 (767px 이하) */
 @media (max-width: 767px) {
   .desktop {

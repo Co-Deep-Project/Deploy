@@ -1,6 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./seoin_style.css";
+import { Pie } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Seoin = () => {
   const navigate = useNavigate();
@@ -25,7 +34,7 @@ const Seoin = () => {
       console.log("Fetching votes from:", `${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);  // URL 확인
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);
       const data = await response.json();
-      console.log("Received vote data:", data); 
+      //console.log("Received vote data:", data); 
       setVotes(data);
       if (activeTab === "votes") {
         setDisplayData(data.slice(0, ITEMS_PER_PAGE));
@@ -56,7 +65,101 @@ const Seoin = () => {
     setBillsLoading(false);
 };
 
+// 그래프 추가
+const groupByCommittee = (bills) => {
+  const committeeCount = {};
+  bills.forEach((bill) => {
+    // 공동발의 법안만 처리
+    if (bill.type === "공동발의") {
+      const committee = bill.committee || "미분류";
+      committeeCount[committee] = (committeeCount[committee] || 0) + 1;
+    }
+  });
   
+  const sortedCommittees = Object.entries(committeeCount).sort(
+    (a, b) => b[1] - a[1]
+  );
+
+  return Object.fromEntries(sortedCommittees);
+};
+
+const prepareChartData = (committeeCount) => {
+  const labels = Object.keys(committeeCount);
+  const data = Object.values(committeeCount);
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: "소관위원회별 공동발의 법안 분포",
+        data,
+        backgroundColor: [
+          "#cfc2e9",
+          "#b6a9d4",
+          "#8a81a9",
+          "#67646c",
+          "#3b383e",
+          "#9c9c9c",
+          "#d3d3d3",
+          "#ececec",
+          "#7f7f7f",
+          "#5a5a5a",
+        ],
+        hoverOffset: 4,
+      },
+    ],
+  };
+};
+
+const CommitteePieChart = ({ bills }) => {
+  // useMemo를 사용하여 bills가 변경될 때만 데이터를 다시 계산
+  const committeeCount = useMemo(() => groupByCommittee(bills), [bills]);
+  const chartData = useMemo(() => prepareChartData(committeeCount), [committeeCount]);
+
+  const [shouldAnimate, setShouldAnimate] = useState(true);
+
+  useEffect(() => {
+    setShouldAnimate(true);
+    return () => setShouldAnimate(false);
+  }, [bills]);
+
+  const options = {
+    plugins: {
+      legend: {
+        display: true,
+        position: "top",
+        labels: {
+          boxWidth: 20,
+          generateLabels: (chart) => {
+            const data = chart.data;
+            const total = data.datasets[0].data.reduce((sum, value) => sum + value, 0);
+
+            return data.labels.map((label, index) => {
+              const value = data.datasets[0].data[index];
+              const percentage = ((value / total) * 100).toFixed(1);
+              return {
+                text: `${label} (${percentage}%)`,
+                fillStyle: data.datasets[0].backgroundColor[index],
+                hidden: !chart.isDatasetVisible(0),
+              };
+            });
+          },
+        },
+      },
+    },
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: shouldAnimate ? 800 : 0  
+    }
+  };
+
+  return (
+    <div style={{ width: "500px", height: "400px", margin: "0 auto" }}>
+      <Pie data={chartData} options={options} />
+    </div>
+  );
+};
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -147,6 +250,13 @@ const Seoin = () => {
       </div>
 
       <main className="main-layout">
+      {activeTab === "bills" && (
+        <div className="chart-container">
+          <h2>소관위원회별 공동발의 법안 분포</h2>
+          <CommitteePieChart bills={bills} />
+        </div>
+      )}
+
         <div className="tab-container">
           <button
             className={`tab-button ${activeTab === "votes" ? "active" : ""}`}
