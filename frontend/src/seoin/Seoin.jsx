@@ -22,8 +22,10 @@ const Seoin = () => {
   const fetchVotesFromServer = async () => {
     setVotesLoading(true);
     try {
+      console.log("Fetching votes from:", `${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);  // URL 확인
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);
       const data = await response.json();
+      console.log("Received vote data:", data); 
       setVotes(data);
       if (activeTab === "votes") {
         setDisplayData(data.slice(0, ITEMS_PER_PAGE));
@@ -39,7 +41,7 @@ const Seoin = () => {
     setBillsLoading(true);
     try {
         console.log(`Fetching bills for ${memberName}`); 
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills?member_name=${memberName}`);
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills_combined?member_name=${memberName}`);
         const data = await response.json();
 
         // 최신순 정렬
@@ -167,7 +169,12 @@ const Seoin = () => {
                 <span className="legend-item legend-against">반대</span>
                 <span className="legend-item legend-abstain">기권</span>
               </div>)
-          }
+          } {activeTab === "bills" && (
+            <div className="legend-container">
+              <span className="legend-item legend-approve">대표발의 의안</span>
+              <span className="legend-item legend-against">공동발의 의안</span>
+            </div>
+          )}
           {isLoading ? (
             <p>데이터를 불러오는 중...</p>
           ) : displayData.length === 0 ? (
@@ -206,13 +213,15 @@ const Seoin = () => {
                       <p><span className="bold">• 의안 번호 : </span> {vote.BILL_NO}</p>
                       <p><span className="bold">• 의결일자 : </span> {vote.VOTE_DATE}</p>
                       <p><span className="bold">• 소관위원회 : </span> {vote.CURR_COMMITTEE}</p>
-                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <p><span className="bold">• 제안이유 및 주요내용 요약: </span></p>
                       <br />
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: vote.DETAILS
-                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
-                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                          __html: vote.DETAILS.summary
+                            ? vote.DETAILS.summary
+                                .replace(/\n{2,3}/g, '\n')
+                                .replace(/\n/g, '<br/>')
+                            : "내용이 없습니다."
                         }}
                       ></p>
 
@@ -225,11 +234,16 @@ const Seoin = () => {
             displayData.map((bill, index) => {
               const displayNumber = bills.length - index; 
               return (
-                <div key={index} className="bill-card">
+                <div
+                key={index}
+                className={`bill-card ${
+                  bill.type === "대표발의" ? "approve" : "against"
+                }`}
+                >
                   <div className="bill-header">
                     <span>{displayNumber}</span>
                     <a 
-                      href={bill.bill_url} 
+                      href={bill.bill_link} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="tooltip-link"
@@ -245,16 +259,18 @@ const Seoin = () => {
                     <div className="bill-details">
                       <p><span className="bold">• 제안일자 : </span> {bill.propose_date}</p>
                       <p><span className="bold">• 제안자 : </span> {bill.proposer}</p>
-                      <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
-                      <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p>
+                      {/* <p><span className="bold">• 공동발의자 : </span> {bill.co_proposer}</p>
+                      <p><span className="bold">• 의안 번호 : </span> {bill.bill_no}</p> */}
                       <p><span className="bold">• 소관위원회 : </span> {bill.committee}</p>
-                      <p><span className="bold">• 제안이유 및 주요내용 : </span></p>
+                      <p><span className="bold">• 제안이유 및 주요내용 요약: </span></p>
                       <br />
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: bill.DETAILS
-                            .replace(/\n{2,3}/g, '\n') // 2~3개의 줄바꿈 -> 1개로 변경
-                            .replace(/\n/g, '<br/>'), // 남은 줄바꿈을 <br/>로 변환
+                          __html: (bill.DETAILS?.summary || bill.SUMMARY)  // 두 가지 경우 모두 처리
+                            ? (bill.DETAILS?.summary || bill.SUMMARY)
+                                .replace(/\n{2,3}/g, '\n')
+                                .replace(/\n/g, '<br/>')
+                            : "요약 정보를 불러오는 중 오류가 발생했습니다."
                         }}
                       ></p>
                     </div>

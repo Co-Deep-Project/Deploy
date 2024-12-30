@@ -9,14 +9,25 @@ import asyncio
 from cachetools import TTLCache
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+import time
 from .chatbot_data import search_news, generate_response, format_news_results
+from openai import OpenAI, AsyncClient
 
 load_dotenv()
 
 # 캐싱 (10분 유지)
+# 데이터를 10분간 임시로 저장해둠
 cache = TTLCache(maxsize=100, ttl=600)
 
 API_KEY = os.getenv("API_KEY")
+bills_url = "https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn"
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+}
 
 app = FastAPI()
 
@@ -55,7 +66,7 @@ async def preload_data():
 
     # 발의 법률 데이터 캐싱
     try:
-        cache["bills"] = await fetch_bills("곽상언")
+        cache["bills"] = await fetch_bills_combined("곽상언")
         bills_data_loaded = True
     except Exception as e:
         print(f"Error preloading bills data: {e}")
@@ -99,31 +110,94 @@ async def chatbot_endpoint(request: QueryRequest):
         return {"response": formatted_results}
     return {"response": generate_response(user_query)}
 
+# 요약 추가
+client = AsyncClient(api_key=os.getenv("OPENAI_API_KEY"))
+async def summarize_bill_details(content):
+    """GPT를 사용해 법안 내용을 요약"""
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "법안의 내용을 간단명료하게 300자 이내로 요약해주세요. 핵심 내용만 3-4줄로 정리해주세요."},
+                {"role": "user", "content": content}
+            ],
+            temperature=0.7,
+            # max_tokens=  # 토큰 수 제한으로 비용과 시간 절약
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Error in summarization: {e}")
+        return "요약 생성 중 오류가 발생했습니다."
 
+# 요약본도 캐시에 저장
+class BillCache(BaseModel):
+    details: str
+    summary: str
 
-def crawl_bill_details(bill_id):
+async def crawl_bill_details(bill_id):
     """
     주어진 BILL_ID에 대해 '제안이유 및 주요내용'을 크롤링하고, 불필요한 부분을 제거합니다.
     """
-    url = f"https://likms.assembly.go.kr/bill/summaryPopup.do?billId={bill_id}"
+    cache_key = f"bill_details_{bill_id}"
+    
+    # 캐시 확인
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
+        # 기존 크롤링 코드
+        url = f"https://likms.assembly.go.kr/bill/summaryPopup.do?billId={bill_id}"
         response = requests.get(url)
         response.raise_for_status()
-
-        # BeautifulSoup을 이용해 HTML 파싱
+        
         soup = BeautifulSoup(response.text, 'html.parser')
         content_div = soup.find("div", class_="textType02 mt30")
-
+        
         if content_div:
-            # HTML 내용을 텍스트로 변환하며 <br/>을 \n로 변환
             raw_html = content_div.decode_contents()
+            # 디버깅
+            print(f"크롤링된 원본 HTML: {raw_html[:200]}...")
             text_with_newlines = raw_html.replace("<br/>", "\n").strip()
-            return BeautifulSoup(text_with_newlines, 'html.parser').get_text()
+            details = BeautifulSoup(text_with_newlines, 'html.parser').get_text()
+            
+            # 디버깅
+            print(f"정제된 텍스트: {details[:200]}...")
+            if len(details.strip()) > 10:  # 의미있는 내용이 있는지 확인
+                try:
+                    summary = await summarize_bill_details(details)
+                    print(f"생성된 요약: {summary}")  # 요약 내용 확인
+                except Exception as e:
+                    print(f"요약 생성 중 오류: {e}")
+                    summary = "요약 생성 중 오류가 발생했습니다."
+            else:
+                summary = "내용이 충분하지 않아 요약을 생성할 수 없습니다."
+
+            # 요약 생성
+            #summary = await summarize_bill_details(details)
+            
+            result = {
+                "details": details.strip(),
+                "summary": summary
+            }
+            
+            # 캐시에 저장
+            cache[cache_key] = result
+            return result
         else:
-            return "내용을 찾을 수 없습니다."
+            # 디버깅
+            print(f"content_div를 찾을 수 없음: {bill_id}")
+            return {
+                "details": "내용을 찾을 수 없습니다.",
+                "summary": "요약 불가"
+            }
+            
     except Exception as e:
         print(f"Error while crawling BILL_ID {bill_id}: {e}")
-        return "크롤링 중 오류 발생."
+        print(f"전체 응답 내용: {response.text[:500]}...")
+        return {
+            "details": f"크롤링 중 오류 발생: {str(e)}",
+            "summary": "요약 불가"
+        }
 
 
 # 의안 투표 데이터 API
@@ -168,6 +242,8 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
         print("Retrieved BILL_IDs:", bill_ids)
 
         vote_data = []
+        tasks = []
+
         for bill_id in bill_ids:
             print(f"Fetching vote data for BILL_ID: {bill_id}")
             response = requests.get(vote_url, params={
@@ -185,9 +261,20 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
                 and "row" in response["nojepdqqaweusdfbi"][1]
             ):
                 for vote in response["nojepdqqaweusdfbi"][1]["row"]:
-                    bill_details = crawl_bill_details(vote["BILL_ID"])
-                    vote["DETAILS"] = bill_details
-                    vote_data.append(vote)
+                    tasks.append({
+                        "vote": vote,
+                        "task": crawl_bill_details(vote["BILL_ID"])
+                    })
+
+        # 모든 bill_details를 병렬로 실행
+        if tasks:
+            bill_details_results = await asyncio.gather(*[task["task"] for task in tasks])
+            
+            # 결과를 vote_data에 추가
+            for task, details in zip(tasks, bill_details_results):
+                vote = task["vote"]
+                vote["DETAILS"] = details
+                vote_data.append(vote)
 
         print("Final vote data with details:", vote_data)
         cache["votes"] = vote_data
@@ -198,17 +285,63 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 발의 법률 데이터 API
-@app.get("/api/bills")
-async def fetch_bills(member_name: str = Query(..., description="Name of the member")):
-    bills_url = "https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn"
+async def fetch_collab_bills_with_selenium():
+    url = "https://www.assembly.go.kr/portal/assm/assmPrpl/prplMst.do?monaCd=FIE6569O&st=22&viewType=CONTBODY&tabId=collabill"
 
-    if "bills" in cache:
-        print(f"Returning cached bills data for {member_name}")
-        return cache["bills"]
-
+    # ChromeDriver를 자동으로 관리
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")  # 브라우저 숨김 모드
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    
     try:
-        response = requests.get(bills_url, params={
+        driver.get(url)
+        await asyncio.sleep(3)  # 페이지 로드 대기
+        
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        tbody = soup.find("tbody", id="prpl_cont__collabill__list")
+        
+        collab_bills = []
+        if tbody:
+            for tr in tbody.find_all("tr"):
+                a_tag = tr.find("td", class_="align_left td_block").find("a")
+                if a_tag and a_tag.has_attr("href"):
+                    bill_link = a_tag["href"].strip()
+                    bill_name = a_tag.get_text(strip=True)
+                    match = re.search(r"billId=([^&]+)", bill_link)
+                    bill_id = match.group(1) if match else None
+                else:
+                    bill_link = None
+                    bill_name = None
+                    bill_id = None
+
+                proposer = tr.find("td", class_="list__proposer").get_text(strip=True) if tr.find("td", class_="list__proposer") else None
+                committee = tr.find("td", class_="board_text", attrs={"class": "list__currCommittee"}).get_text(strip=True) if tr.find("td", class_="board_text", attrs={"class": "list__currCommittee"}) else None
+                propose_date = tr.find("td", class_="list__proposeDt").get_text(strip=True) if tr.find("td", class_="list__proposeDt") else None
+
+                collab_bills.append({
+                    "type": "공동발의",
+                    "bill_id": bill_id,
+                    "bill_name": bill_name,
+                    "bill_link": bill_link,
+                    "proposer": proposer,
+                    "committee": committee,
+                    "propose_date": propose_date
+                })
+            return collab_bills
+        else:
+            print("No tbody found in the page source.")
+            return []
+    finally:
+        driver.quit()
+
+@app.get("/api/bills_combined")
+async def fetch_bills_combined(member_name: str = Query(...)):
+    try:
+        # 대표발의 법안 가져오기
+        bills = []
+        response = requests.get(bills_url, headers=headers, params={
             "Key": API_KEY,
             "Type": "json",
             "pIndex": 1,
@@ -216,25 +349,48 @@ async def fetch_bills(member_name: str = Query(..., description="Name of the mem
             "PROPOSER": member_name,
             "AGE": "22"
         }).json()
-        bills = []
-
+        
+        # 병렬로 처리하기 위한 태스크 리스트
+        tasks = []
+        
         for item in response.get("nzmimeepazxkubdpn", [])[1].get("row", []):
-            bill_id = item.get("BILL_ID")  # BILL_ID 사용
-            bill_details = crawl_bill_details(bill_id)  # BILL_ID로 크롤링
+            bill_id = item.get("BILL_ID")
+            # 비동기로 처리할 태스크 추가
+            tasks.append(crawl_bill_details(bill_id))
+        
+        # 모든 태스크를 동시에 실행
+        bill_details_list = await asyncio.gather(*tasks)
+        
+        # 결과 조합
+        for item, details in zip(response.get("nzmimeepazxkubdpn", [])[1].get("row", []), bill_details_list):
             bills.append({
-                "bill_no" : item.get("BILL_NO"),
-                "bill_url" : item.get("DETAIL_LINK"),
-                "bill_id": bill_id,
+                "type": "대표발의",
+                "bill_id": item.get("BILL_ID"),
                 "bill_name": item.get("BILL_NAME"),
                 "propose_date": item.get("PROPOSE_DT"),
                 "committee": item.get("COMMITTEE"),
                 "proposer": item.get("PROPOSER"),
-                "co_proposer": item.get("PUBL_PROPOSER"),
-                "DETAILS": bill_details  # DETAILS 필드 추가
+                "bill_link": item.get("DETAIL_LINK"),
+                "DETAILS": details["details"],
+                "SUMMARY": details["summary"]
             })
-
-        cache["bills"] = bills 
-        return bills
+            
+        # 비슷한 방식으로 공동발의 법안도 처리
+        collab_bills = await fetch_collab_bills_with_selenium()
+        collab_tasks = []
+        
+        for bill in collab_bills:
+            if bill["bill_id"]:
+                collab_tasks.append(crawl_bill_details(bill["bill_id"]))
+        
+        collab_details_list = await asyncio.gather(*collab_tasks)
+        
+        for bill, details in zip(collab_bills, collab_details_list):
+            bill["DETAILS"] = details["details"]
+            bill["SUMMARY"] = details["summary"]
+        
+        return bills + collab_bills
+        
     except Exception as e:
-        print(f"Error in fetch_bills: {e}")
+        print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
