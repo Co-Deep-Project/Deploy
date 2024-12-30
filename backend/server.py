@@ -155,14 +155,28 @@ async def crawl_bill_details(bill_id):
         
         if content_div:
             raw_html = content_div.decode_contents()
+            # 디버깅
+            print(f"크롤링된 원본 HTML: {raw_html[:200]}...")
             text_with_newlines = raw_html.replace("<br/>", "\n").strip()
             details = BeautifulSoup(text_with_newlines, 'html.parser').get_text()
             
+            # 디버깅
+            print(f"정제된 텍스트: {details[:200]}...")
+            if len(details.strip()) > 10:  # 의미있는 내용이 있는지 확인
+                try:
+                    summary = await summarize_bill_details(details)
+                    print(f"생성된 요약: {summary}")  # 요약 내용 확인
+                except Exception as e:
+                    print(f"요약 생성 중 오류: {e}")
+                    summary = "요약 생성 중 오류가 발생했습니다."
+            else:
+                summary = "내용이 충분하지 않아 요약을 생성할 수 없습니다."
+
             # 요약 생성
-            summary = await summarize_bill_details(details)
+            #summary = await summarize_bill_details(details)
             
             result = {
-                "details": details,
+                "details": details.strip(),
                 "summary": summary
             }
             
@@ -170,6 +184,8 @@ async def crawl_bill_details(bill_id):
             cache[cache_key] = result
             return result
         else:
+            # 디버깅
+            print(f"content_div를 찾을 수 없음: {bill_id}")
             return {
                 "details": "내용을 찾을 수 없습니다.",
                 "summary": "요약 불가"
@@ -177,8 +193,9 @@ async def crawl_bill_details(bill_id):
             
     except Exception as e:
         print(f"Error while crawling BILL_ID {bill_id}: {e}")
+        print(f"전체 응답 내용: {response.text[:500]}...")
         return {
-            "details": "크롤링 중 오류 발생.",
+            "details": f"크롤링 중 오류 발생: {str(e)}",
             "summary": "요약 불가"
         }
 
@@ -350,7 +367,10 @@ async def fetch_bills_combined(member_name: str = Query(...)):
                 "type": "대표발의",
                 "bill_id": item.get("BILL_ID"),
                 "bill_name": item.get("BILL_NAME"),
-                # ... 다른 필드들 ...
+                "propose_date": item.get("PROPOSE_DT"),
+                "committee": item.get("COMMITTEE"),
+                "proposer": item.get("PROPOSER"),
+                "bill_link": item.get("DETAIL_LINK"),
                 "DETAILS": details["details"],
                 "SUMMARY": details["summary"]
             })

@@ -266,11 +266,11 @@ const Seoin = () => {
                       <br />
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: bill.DETAILS.summary  
-                            ? bill.DETAILS.summary
+                          __html: (bill.DETAILS?.summary || bill.SUMMARY)  // 두 가지 경우 모두 처리
+                            ? (bill.DETAILS?.summary || bill.SUMMARY)
                                 .replace(/\n{2,3}/g, '\n')
                                 .replace(/\n/g, '<br/>')
-                            : "내용이 없습니다."
+                            : "요약 정보를 불러오는 중 오류가 발생했습니다."
                         }}
                       ></p>
                     </div>
