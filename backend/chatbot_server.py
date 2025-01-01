@@ -1,8 +1,10 @@
+import os
 import requests
 import openai
 import html
-import asyncio
-import os
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # 환경 변수 로드
@@ -22,6 +24,20 @@ session_context = {
     "last_topic": None,  # 마지막 대화 주제
     "conversation_history": []  # 대화 기록
 }
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class QueryRequest(BaseModel):
+    query: str
 
 def search_news(query, display=5, sort='sim'):
     """
@@ -235,6 +251,33 @@ async def test_queries():
     response4 = await handle_query(query4)
     print("응답:\n", response4)
 
-# asyncio.run을 사용하여 테스트 실행
-if __name__ == "__main__":
-    asyncio.run(test_queries())
+
+
+@app.post("/search_news")
+async def search_news_endpoint(request: QueryRequest):
+    keyword = request.query.replace("뉴스", "").strip()
+    news_results = search_news(keyword)
+    if "error" in news_results:
+        raise HTTPException(status_code=500, detail=news_results["message"])
+    formatted_results = format_news_results(news_results)
+    return {"response": formatted_results}
+
+
+@app.post("/ask_gpt")
+async def ask_gpt_endpoint(request: QueryRequest):
+    try:
+        answer = generate_response(request.query)
+        return {"response": answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/chatbot")
+async def chatbot_endpoint(request: QueryRequest):
+    user_query = request.query.lower()
+    if "뉴스" in user_query:
+        keyword = user_query.replace("뉴스", "").strip()
+        news_results = search_news(keyword)
+        formatted_results = format_news_results(news_results)
+        return {"response": formatted_results}
+    return {"response": generate_response(user_query)}

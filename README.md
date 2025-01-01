@@ -7,7 +7,8 @@
 ## Co-Deep Project backend
 
 - python 가상환경 실행 `source myenv/bin/activate`
-- FastAPI 서버 실행 명령: `uvicorn backend.server:app --reload`
+- FastAPI 트래킹 서버 실행 명령: `uvicorn backend.server:app --host 0.0.0.0 --port 8000`
+- FastAPI 챗봇 서버 실행 명령: `uvicorn backend.chatbot_server:app --host 0.0.0.0 --port 8001`
 
 ## home 브랜치 (가현)
 ### 변경사항
@@ -72,3 +73,8 @@
 - 프론트엔드에서 상세 내용 없애고 요약된 정보만 보이도록 함 (상세정보는 어차피 링크 누르면 연결되니까)
 - 투표 데이터와 법안 데이터의 api 응답 구조가 달라서 프론트에서 불러오는 방식을 서로 다르게 함
 - (원형차트 컴포넌트 추가) `npm install chart.js react-chartjs-2`
+
+
+## 20250102 서버 분리 (서인)
+- 챗봇, 트래킹 서버 분리 완료.
+- 문제점 : 캐시 문제로 인해(추측) 발의 투표 데이터가 로드되지 않음. 챗봇에서 최신 뉴스 데이터가 안 불러와지는 것 같은데, 이건 예전부터 문제였던 사항같음. 팀원들에게 확인 체크 필요함.

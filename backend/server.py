@@ -13,15 +13,14 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
-import time
-from .chatbot_data import search_news, generate_response, format_news_results
+from datetime import datetime, timedelta
 from openai import OpenAI, AsyncClient
 
 load_dotenv()
 
-# 캐싱 (10분 유지)
+# 캐싱 (10분 유지) -> 24시간으로 변경
 # 데이터를 10분간 임시로 저장해둠
-cache = TTLCache(maxsize=100, ttl=600)
+cache = TTLCache(maxsize=10000, ttl=86400)
 
 API_KEY = os.getenv("API_KEY")
 bills_url = "https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn"
@@ -78,37 +77,6 @@ async def preload_data():
 async def startup_event():
     asyncio.create_task(preload_data()) 
 
-# 뉴스 검색 API
-@app.post("/search_news")
-async def search_news_endpoint(request: QueryRequest):
-    keyword = request.query.replace("뉴스", "").strip()
-    news_results = search_news(keyword)
-    if "error" in news_results:
-        raise HTTPException(status_code=500, detail=news_results["message"])
-    formatted_results = format_news_results(news_results)
-    return {"response": formatted_results}
-
-
-# GPT API 처리
-@app.post("/ask_gpt")
-async def ask_gpt_endpoint(request: QueryRequest):
-    try:
-        answer = generate_response(request.query)
-        return {"response": answer}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# 통합 챗봇 API
-@app.post("/chatbot")
-async def chatbot_endpoint(request: QueryRequest):
-    user_query = request.query.lower()
-    if "뉴스" in user_query:
-        keyword = user_query.replace("뉴스", "").strip()
-        news_results = search_news(keyword)
-        formatted_results = format_news_results(news_results)
-        return {"response": formatted_results}
-    return {"response": generate_response(user_query)}
 
 # 요약 추가
 client = AsyncClient(api_key=os.getenv("OPENAI_API_KEY"))
@@ -200,11 +168,26 @@ async def crawl_bill_details(bill_id):
         }
 
 
+last_refresh_time = None
+
+
 # 의안 투표 데이터 API
 @app.get("/api/vote_data")
 async def fetch_vote_data(member_name: str = Query(..., description="Name of the member")):
     vote_url = "https://open.assembly.go.kr/portal/openapi/nojepdqqaweusdfbi"
     bill_list_url = "https://open.assembly.go.kr/portal/openapi/nwbpacrgavhjryiph"
+
+
+    global last_refresh_time
+
+    # 현재 시간 확인
+    current_time = datetime.now()
+
+    # 자정 기준 새로고침 제한
+    if last_refresh_time:
+        if current_time.date() == last_refresh_time.date():
+            print("Returning cached vote data, new refresh is allowed only after midnight.")
+            return cache.get("votes", "No cached data available")
 
     if "votes" in cache:
         print(f"Returning cached vote data for {member_name}")
@@ -278,6 +261,8 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
 
         print("Final vote data with details:", vote_data)
         cache["votes"] = vote_data
+        last_refresh_time = current_time
+        print("Vote data refreshed at:", last_refresh_time)
         return vote_data
 
     except Exception as e:
@@ -338,6 +323,18 @@ async def fetch_collab_bills_with_selenium():
 
 @app.get("/api/bills_combined")
 async def fetch_bills_combined(member_name: str = Query(...)):
+    global last_refresh_time
+
+    # 현재 시간 확인
+    current_time = datetime.now()
+
+    # 자정 기준 새로고침 제한
+    if last_refresh_time:
+        if current_time.date() == last_refresh_time.date():
+            print("Returning cached bills data, new refresh is allowed only after midnight.")
+            return cache.get("bills", "No cached data available")
+
+
     try:
         # 대표발의 법안 가져오기
         bills = []
@@ -388,7 +385,10 @@ async def fetch_bills_combined(member_name: str = Query(...)):
         for bill, details in zip(collab_bills, collab_details_list):
             bill["DETAILS"] = details["details"]
             bill["SUMMARY"] = details["summary"]
-        
+
+        last_refresh_time = current_time
+        print("Bills data refreshed at:", last_refresh_time)
+
         return bills + collab_bills
         
     except Exception as e:
