@@ -11,7 +11,7 @@ const Chatbot = () => {
   최신 정치 소식이 궁금하시거나 잘 모르는 정치 용어가 있다면 언제든 편하게 물어보세요. 📚✨`
     }
   ];  
-
+  const [isSending, setIsSending] = useState(false);  // 중복호출 방지
   const [isOpen, setIsOpen] = useState(false); // 챗봇 열림/닫힘 상태
   const [messages, setMessages] = useState(initialMessages); // 챗봇 메시지 상태
   const [inputValue, setInputValue] = useState(""); // 채팅 입력 상태
@@ -59,36 +59,46 @@ const Chatbot = () => {
   // 챗봇 메시지 전송
   const handleSend = async () => {
     if (inputValue.trim() === "") return;
-
-    const userMessage = { sender: "user", text: inputValue };
-    setMessages((prev) => [...prev, userMessage]);
+    
+    // 이미 전송 중이면 중복 전송 방지
+    if (isSending) return;
 
     try {
+      setIsSending(true); // 전송 시작
+      
+      const userMessage = { sender: "user", text: inputValue };
+      setMessages((prev) => [...prev, userMessage]);
+      
+      const currentInput = inputValue; // 현재 입력값 저장
+      setInputValue(""); // 입력 초기화를 먼저 수행
+      
       const response = await fetch("http://localhost:8001/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: inputValue }),
-        
+        body: JSON.stringify({ query: currentInput }),
       });
-
+      
       const data = await response.json();
-    const chatbotResponse = data.response;
-
-    if (inputValue.includes("뉴스")) {
-      const newsItems = parseChatbotNews(chatbotResponse);
-      const botMessage = { sender: "bot", newsItems }; // 뉴스 데이터를 배열로 저장
-      setMessages((prev) => [...prev, botMessage]);
-    } else {
-      const botMessage = { sender: "bot", text: chatbotResponse };
-      setMessages((prev) => [...prev, botMessage]);
+      const chatbotResponse = data.response;
+      
+      if (currentInput.includes("뉴스")) {
+        const newsItems = parseChatbotNews(chatbotResponse);
+        const botMessage = { sender: "bot", newsItems };
+        setMessages((prev) => [...prev, botMessage]);
+      } else {
+        const botMessage = { sender: "bot", text: chatbotResponse };
+        setMessages((prev) => [...prev, botMessage]);
+      }
+    } catch (error) {
+      console.error("Error communicating with chatbot:", error);
+      const errorMessage = {
+        sender: "bot",
+        text: "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsSending(false); // 전송 완료
     }
-  } catch (error) {
-    console.error("Error communicating with chatbot:", error);
-    const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요." };
-    setMessages((prev) => [...prev, errorMessage]);
-  }
-
-    setInputValue(""); // 입력 초기화
   };
 
   return (
@@ -161,7 +171,10 @@ const Chatbot = () => {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.repeat) {
-                  handleSend();
+                  e.preventDefault();
+                  const currentInput = inputValue; // 현재 입력 값 저장
+                  setInputValue(""); // 입력 창 초기화
+                  handleSend(currentInput); // 현재 입력 값을 handleSend로 전달
                 }
               }}
               placeholder="메시지를 입력하세요..."
