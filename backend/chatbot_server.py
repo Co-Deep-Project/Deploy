@@ -79,7 +79,6 @@ def format_news_results(news_results):
     return "\n".join(formatted_results)
 
 
-
 client = Client(api_key=OPENAI_API_KEY)
 
 def generate_response(prompt):
