@@ -59,7 +59,7 @@ const Desktop = () => {
           </div>
         </div>
 
-        <header className="header">
+        <header className="desktop-header">
           <p id="animated-text" className="p"></p> {/* 애니메이션 텍스트 위치 */}
         </header>
       </div>

@@ -23,7 +23,7 @@
 }
 
 /* "객관적 정보, 주체적 판단" 슬로건 */
-.header {
+.desktop-header {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -31,12 +31,17 @@
   text-align: center;
   margin-top: 20px;
   margin-bottom: 40px;
+
 }
 
-.header .p {
+.desktop-header .p {
   font-weight: bold;
   line-height: 1.5;
-  font-size: clamp(30px, 2vw, 60px)
+  font-size: clamp(30px, 2vw, 60px);
+  position: relative; /* fixed 대신 relative로 변경 */
+  width: 100%;
+  height: 60px;
+  z-index: 1000;
 }
 
 .heading-subheading .label {
