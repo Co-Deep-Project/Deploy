@@ -84,7 +84,7 @@ async def summarize_bill_details(content):
     """GPT를 사용해 법안 내용을 요약"""
     try:
         response = await client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "법안의 내용을 간단명료하게 300자 이내로 요약해주세요. 핵심 내용만 3-4줄로 정리해주세요."},
                 {"role": "user", "content": content}
@@ -328,11 +328,11 @@ async def fetch_bills_combined(member_name: str = Query(...)):
     # 현재 시간 확인
     current_time = datetime.now()
 
-    # 자정 기준 새로고침 제한
-    if last_refresh_time:
-        if current_time.date() == last_refresh_time.date():
-            print("Returning cached bills data, new refresh is allowed only after midnight.")
-            return cache.get("bills", "No cached data available")
+    if "bills" in cache:
+        print(f"캐시에서 반환된 bills 데이터: {cache['bills']}")
+        return cache["bills"]
+
+    print("캐시에 데이터가 없음. API 요청 시작...")
 
 
     try:
@@ -387,10 +387,12 @@ async def fetch_bills_combined(member_name: str = Query(...)):
             bill["SUMMARY"] = details["summary"]
 
         last_refresh_time = current_time
-        print("Bills data refreshed at:", last_refresh_time)
+        print(f"마지막 갱신 시간: {last_refresh_time}")
 
+        cache["bills"] = bills + collab_bills
         return bills + collab_bills
         
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
