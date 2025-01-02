@@ -1,50 +1,38 @@
-/* 전체 화면 컨테이너 */
 .start-screen {
-  font-family: "Noto Sans KR", sans-serif;
-  width: 500px; /* ResultScreen과 동일한 너비 */
-  height: 900px; /* ResultScreen과 동일한 높이 */
   display: flex;
-  justify-content: center; /* 가로 중앙 정렬 */
-  align-items: center; /* 세로 중앙 정렬 */
-  background: #121212; /* 검은색 배경 */
-  color: #ffffff;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  margin: 0 auto; /* 중앙 정렬 */
-  animation: backgroundAnimation 15s linear infinite; /* 배경 애니메이션 효과 */
+  flex-direction: column; /* 세로 정렬 */
+  justify-content: center; /* 수직 중앙 정렬 */
+  align-items: center; /* 수평 중앙 정렬 */
+  height: 100vh; /* 화면 높이를 100%로 설정 */
+  background: white; /* 배경색 */
+  color: black;
+  font-family: "Noto Sans KR", sans-serif;
+  text-align: center; /* 텍스트 중앙 정렬 */
+  margin-left: 10%;
 }
 
-/* 배경 애니메이션 효과 */
-@keyframes backgroundAnimation {
-  0% {
-    background: radial-gradient(circle, #0f0f0f, #181818 80%);
-  }
-  50% {
-    background: radial-gradient(circle, #2f2f2f, #181818 80%);
-  }
-  100% {
-    background: radial-gradient(circle, #0f0f0f, #181818 80%);
-  }
-}
 
 /* 메인 텍스트 */
 .main-heading {
   font-size: 3.2rem;
   font-weight: bold;
-  color: #ffffff;
+  color: black;
   margin-bottom: 15px;
+  text-align: center; /* 텍스트를 중앙 정렬 */
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
   letter-spacing: 2px; /* 글자 간격 넓히기 */
 }
 
+
 /* 서브 텍스트 */
 .sub-heading {
   font-size: 1.4rem;
-  color: #cccccc;
+  color: black;
+  font-weight: bold;
   margin-bottom: 20px; /* 서브텍스트와 버튼 사이의 간격 */
   letter-spacing: 1px; /* 글자 간격 넓히기 */
   line-height: 1.5; /* 줄 간격 넓히기 */
+  text-align: center; /* 텍스트를 중앙 정렬 */
 }
 
 /* 시작 버튼 */
@@ -59,6 +47,13 @@
   cursor: pointer;
   transition: all 0.3s ease-in-out;
   box-shadow: 0 5px 15px rgba(192, 132, 252, 0.4);
+  margin-top: 20px; /* 버튼 위에 여백 추가 */
+}
+
+.start-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .start-button:hover {
@@ -81,6 +76,28 @@
   animation: moveBackground 10s linear infinite;
   z-index: -1;
 }
+
+.start-footer {
+  position: absolute; /* footer를 고정 */
+  bottom: 5%; /* 화면 하단에서 약간 위로 이동 */
+  width: 100%; /* 너비를 전체로 설정 */
+  text-align: center;
+  line-height: 1.35;
+  font-size: 13px;
+  margin-left: 9%;
+}
+
+.start-footer p {
+  font-size: 13px;
+}
+
+.start-highlight {
+  background: linear-gradient(90deg, #4a4a4a, #2b2b2b); /* 톤다운 블랙 그라디언트 */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; /* 텍스트에 그라디언트 적용 */
+}
+
+
 
 /* 배경 애니메이션 효과 */
 @keyframes moveBackground {
