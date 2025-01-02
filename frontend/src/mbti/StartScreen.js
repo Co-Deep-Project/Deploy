@@ -20,7 +20,7 @@ const StartScreen = () => {
   };
 
   return (
-    <div className="header">
+    <div className="start-header">
       <div className="logo-container">
           <img src={logo} alt="PoliTracker Logo" onClick = {handleHomeClick} className="poliLogo" />
       </div>
