@@ -1,105 +1,155 @@
+
 /* 전체 결과 화면 */
-.result-container {
-  background: #121212; /* 검은 배경 */
-  color: #fff; /* 텍스트 색상 */
-  padding: 30px;
-  border-radius: 15px;
-  width: 500px;
-  max-height: auto;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6); /* 그림자 추가 */
-  font-family: 'Poppins', sans-serif;
-  text-align: center;
+.result-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 20px;
 }
 
-/* 헤더 영역 */
+/* 결과 헤더 */
 .result-header {
-  background: #8455b3; /* 연한 보라색 배경 */
-  color: #fff; /* 흰색 텍스트 */
+  color: white;
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
+  text-align: center;
 }
 
 .result-header h1 {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 2.5rem;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 텍스트 그림자 */
+}
+/* 이미지 스타일 */
+.result-image {
+  width: 300px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+
+.description-container {
+  font-size: 1.1rem; /* 글자 크기 */
+  color: #4a4a4a; /* 차분한 텍스트 색상 */
+  background: #f9f6ff; /* 부드러운 연보라색 배경 */
+  border-radius: 12px; /* 둥근 모서리 */
+  padding: 20px 30px; /* 충분한 내부 여백 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+  margin-bottom: 20px; /* 버튼과의 간격 */
+  text-align: justify; /* 텍스트 양쪽 정렬 */
+  line-height: 1.8; /* 줄 간격 */
+  max-width: 600px; /* 최대 너비 제한 */
+  font-family: Arial, Helvetica, sans-serif; /* 고급스러운 폰트 사용 */
+  word-break: keep-all; /* 단어가 깨지지 않도록 설정 */
+}
+
+/* 텍스트 강조 */
+.description-container span {
+  color: #8455b3; /* 보라색으로 강조 */
+  font-weight: bold; /* 강조된 텍스트 굵게 */
+}
+
+
+.description-container ul {
+  list-style-type: disc; /* 원형 기호 */
+  padding-left: 20px; /* 기본 왼쪽 여백 */
   margin: 0;
 }
 
-.result-header p {
-  font-size: 1.2rem;
-  margin-top: 10px;
-}
-
-/* 성향 설명 섹션 */
-.result-description {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #ece5f9; /* 연한 라벤더 배경 */
-  border-radius: 10px;
-  font-size: 1rem;
+.description-container li {
+  margin-bottom: 18px; /* 항목 간격 */
+  font-weight: 400;
   color: #333;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  line-height: 1.8;
+  position: relative;
 }
 
-/* 신문 추천 설명 */
-.newspaper-description {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f9f6ff; /* 좀 더 연한 배경색 */
-  border-radius: 10px;
-  font-size: 1rem;
-  color: #444;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.description-container li::marker {
+  font-size: 1.5rem; /* 글머리 기호 크기 키우기 */
+  color: black; /* 글머리 기호 색상 */
 }
 
-/* 뉴스 헤드라인 섹션 */
-.news-headlines {
-  margin-top: 20px;
+.result-description {
+  font-size: 1rem; /* 글자 크기 */
+  color: #4a4a4a; /* 텍스트 색상: 차분한 회색 */
+  background: linear-gradient(135deg, #f7f3fc, #ece5f9); /* 부드러운 그라데이션 배경 */
+  border-radius: 15px; /* 둥근 모서리 */
+  padding: 20px; /* 충분한 내부 여백 */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 부드러운 그림자 */
+  margin-bottom: 30px; /* 아래 간격 */
+  text-align: left; /* 왼쪽 정렬 */
+  line-height: 1.8; /* 줄 간격 */
+  max-width: 600px; /* 최대 너비 제한 */
+  word-break: keep-all; /* 단어가 깨지지 않도록 설정 */
 }
 
-.news-headlines h3 {
-  font-size: 1.2rem;
-  color: #eee;
-  margin-bottom: 15px;
+/* 설명 글머리 기호 */
+.result-description ul {
+  list-style-type: disc; /* 기본 글머리 기호 */
+  padding-left: 20px; /* 글머리와 텍스트 간격 */
 }
 
-.headlines-list .headline {
-  background: #333;
-  padding: 5px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 1rem;
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.3s ease, background 0.3s ease;
-  text-align: left;
+.result-description li {
+  margin-bottom: 12px; /* 각 항목 사이 간격 */
+  font-weight: 400; /* 글씨 굵기 */
+  color: #333; /* 조금 더 어두운 색상 */
 }
 
-.headlines-list .headline:hover {
-  transform: translateY(-2px);
-  background: #444;
+/* 강조 텍스트 */
+.result-description li span {
+  color: #8455b3; /* 보라색으로 강조 */
+  font-weight: 600; /* 강조된 텍스트 굵게 */
 }
 
-.headlines-list .headline.selected {
-  background: #8455b3; /* 선택된 뉴스 강조 */
-  color: #fff;
-}
 
 /* 버튼 스타일 */
-.result-actions .restart-button {
-  background-color: #8455b3;
-  color: #fff;
-  padding: 12px 25px;
+.restart-button {
+  background-color: #cfc2e9; /* 보라색 배경 */
+  color: white; /* 흰색 텍스트 */
+  padding: 10px 20px;
   border-radius: 10px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   border: none;
-  transition: background 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, transform 0.2s;
 }
 
-.result-actions .restart-button:hover {
-  background-color: #6d3ca6;
+
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  line-height: 1.35;
+}
+
+.footer p {
+  font-size: 13px;
+}
+
+.finishBtn {
+    background: #cfc2e9;
+    color: black;
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.finishBtn:hover {
+  background-color: #b8a6d9; /* 보다 진한 보라색 */
+  transform: scale(1.05);
+}
+.character-image {
+  width: 250px; /* 이미지 크기 수정 */
+  height: auto;
+  border-radius: 50%; /* 원형 이미지 */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 이미지 그림자 */
+  margin-bottom: 20px;
 }

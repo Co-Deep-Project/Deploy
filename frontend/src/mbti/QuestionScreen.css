@@ -1,95 +1,90 @@
-/* 전체 화면 컨테이너 */
-.mbti-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
-  background-size: 400% 400%;
-  animation: gradientAnimation 10s ease infinite;
-  color: #ffffff;
-  font-family: 'Poppins', sans-serif; /* 글씨체를 Poppins로 변경 */
-  overflow: hidden;
-  position: relative;
+.question-header {
+  position: relative; /* fixed 대신 relative로 변경 */
+  width: 100%;
+  height: 60px;
+  z-index: 1000;
 }
 
-/* 그라데이션 애니메이션 */
-@keyframes gradientAnimation {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* 중앙 컨테이너 크기 및 텍스트 크기 조정 */
 .question-box {
-  width: 500px; /* ResultScreen과 동일한 너비 */
-  height: auto; /* ResultScreen과 동일한 높이 */
-  background: #1f1f1f;
+  margin-top: 20px !important;
+  width: 100%;
+  max-width: 600px;
+  background: #f8f8f8;
   border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 -5px 15px rgba(255, 255, 255, 0.05);
-  padding: 25px; /* 패딩 조정 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* 컨텐츠를 위로 정렬 */
-  font-size: 1rem;
-  gap: 20px; /* 간격 줄이기 */
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  overflow: auto;
 }
 
-/* 진행률 표시 */
-.progress-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 5px; /* 텍스트와 진행 바 간격 */
+.home-button {
+  height: auto;
 }
+
+
+@media (max-width: 768px) {
+  .mbti-container, .question-box {
+    width: 95%;        /* 화면이 작을 때는 너비를 조금 더 늘림 */
+  }
+}
+
+
+/* 진행률 */
+.progress-wrapper {
+  width: 100%; 
+  margin-bottom: 20px; 
+}
+
+
 
 .progress-text {
   font-size: 1rem;
   font-weight: bold;
-  color: #cfcfcf;
-  text-align: center; /* 중앙 정렬 */
+  color: black;
+  text-align: center;
 }
 
-/* 진행 바 */
 .status-bar {
   width: 100%;
   height: 15px;
   background-color: #292929;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .status-bar-fill {
+  width: 0%; /* 초기 상태 */
   height: 100%;
   background: linear-gradient(90deg, #c084fc, #8455b3);
   transition: width 0.5s ease-in-out;
   box-shadow: 0 0 10px rgba(192, 132, 252, 0.6), 0 0 20px rgba(132, 85, 179, 0.4);
 }
 
-/* 질문 박스 */
 .qBox {
   background: rgba(255, 255, 255, 0.05);
   padding: 20px;
   border-radius: 15px;
   text-align: center;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 15px;
+  margin-top: 10px;
 }
 
 .qBox h2 {
   font-size: 1.5rem;
-  color: #f8f8f8;
+  color: black;
   line-height: 1.6;
   font-weight: 500;
   letter-spacing: 0.5px;
+  word-break:keep-all;
 }
 
-/* 답변 버튼 */
+/*버튼 */
 .answerBox {
   display: flex;
   flex-direction: column;
@@ -97,90 +92,146 @@
 }
 
 .answer-button {
-  width: 100%;
-  background: linear-gradient(135deg, #c084fc, #8455b3);
-  color: #ffffff;
+  background: #cfc2e9;
+  color: black; 
   font-size: 1.2rem;
-  font-weight: bold;
   padding: 20px 30px;
   border: none;
   border-radius: 10px;
-  text-align: left;
-  box-shadow: 0 5px 15px rgba(132, 85, 179, 0.4), 0 0 10px rgba(192, 132, 252, 0.6);
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out;
+  word-break: keep-all;
 }
 
 .answer-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(132, 85, 179, 0.6), 0 0 20px rgba(192, 132, 252, 0.8);
+  background-color: #9c84c6;
 }
 
 .answer-button:active {
   transform: scale(0.98);
 }
 
-/* 클릭된 버튼만 색상 변경 */
 .answer-button.selected {
-  background: #731ed3; /* 선택된 버튼 색상 */
+  background: #9c84c6;
+  color: black;
 }
 
-/* 버튼 컨테이너 */
+
 .button-container {
   display: flex;
-  justify-content: space-between; /* 이전 버튼과 다음 버튼을 양쪽으로 배치 */
-  margin-top: 20px;
+  justify-content: space-between; /* 버튼 좌우로 배치 */
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto 0 auto; /* 위쪽에 20px의 간격 추가 */
+  gap: 15px; /* 버튼 사이의 간격 */
+  padding-top: 15px; /* 버튼과 컨텐츠 사이 간격 */
 }
 
+
 .next-button {
-  background: #8455b3;
-  color: #ffffff;
+  background: #cfc2e9;
+  color: black;
   font-size: 1.2rem;
-  font-weight: bold;
   padding: 10px 20px;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  transition: background-color 0.3s ease;
+}
+
+.logo-container {
+  position: absolute;
+  top: 5px;
+  left: 20px;
+}
+
+
+.poliLogo {
+  width: 250px;
+  height: auto;
+  max-width: 100%; /* 화면 너비 초과 방지 */
+}
+
+
+.prev-button {
+  background: #cfc2e9; /* 기본 버튼 색상 */
+  color: black; /* 텍스트 색상 */
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease; /* 부드러운 전환 효과 */
+}
+.prev-button:hover {
+  background-color: #9c84c6;
+  transform: translateY(-2px); 
 }
 
 .next-button:hover {
-  background: #6d3ca6;
+  background: #9c84c6; /* hover 상태에서 조금 더 어두운 색상 */
+  transform: translateY(-2px); /* 약간 위로 올라가는 효과 */
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15); /* 부드러운 그림자 */
 }
 
 .next-button:active {
   transform: scale(0.95);
+  
 }
-
-.next-button:disabled {
-  background: #555; /* 비활성화된 버튼 색상 */
-  cursor: not-allowed; /* 클릭 불가 표시 */
+.prev-button:disabled {
+  background: #555;
+  cursor: not-allowed;
   opacity: 0.6;
 }
 
-/* 파동 효과 */
-
-@keyframes waveAnimation {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+.next-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.mbti-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.05);
-  animation: waveAnimation 6s ease-in-out infinite;
-  z-index: -1;
-  opacity: 0.5;
+
+.complete-message {
+  font-family: 'Arial', sans-serif; /* 폰트 설정 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  background-color: #ffffff; /* 배경색 */
+  padding: 20px; /* 패딩 */
+  border-radius: 8px; /* 모서리 둥글게 처리 */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* 그림자 효과 */
+  width: 80%; /* 너비 */
+  max-width: 600px; /* 최대 너비 */
+  margin: 40px auto; /* 상하 40px, 좌우 자동 중앙 정렬 */
+}
+
+.complete-message h2 {
+  font-size: 24px; /* 제목 크기 */
+  color: #333; /* 제목 색상 */
+  margin-bottom: 20px; /* 제목 아래 여백 */
+}
+
+.complete-message button {
+  padding: 10px 20px; /* 버튼 내부 여백 */
+  font-size: 18px; /* 텍스트 크기 */
+  background-color: #cfc2e9; /* 배경색 */
+  color: black; /* 글자색 */
+  border: none; /* 테두리 제거 */
+  border-radius: 5px; /* 둥근 모서리 */
+  cursor: pointer; /* 커서 변경 */
+  transition: background-color 0.3s, transform 0.2s; /* 색상 및 변환 효과 */
+}
+
+.complete-message button:hover {
+  background-color: #b8a6d9;; /* 호버 시 배경색 변경 */
+  transform: scale(1.05); /* 버튼 크기 증가 효과 */
+}
+
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  line-height: 1.35;
+}
+
+.footer p {
+  font-size: 13px;
 }
