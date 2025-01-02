@@ -9,7 +9,7 @@
 }
 
 /* 헤더 스타일 */
-.header {
+.yunji-header {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -30,6 +30,8 @@
   max-width: 100%; /* 화면 너비 초과 방지 */
 }
 
+
+
 .menu {
   display: flex;
   position: absolute;
@@ -45,14 +47,13 @@
 }
 
 .menu button {
-  font-size: 1em;
-  padding: 6px 16px;
-  border: 1px solid #333;
-  background-color: transparent;
-  color: #333;
+  border: 1px solid black; 
+  padding: 10px 15px; 
+  background-color: white;
+  cursor: pointer; 
+  font-size: 14px; 
   border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s; 
 }
 .footer {
   text-align: center;
@@ -71,17 +72,21 @@
 .main-content {
   display: flex;
   flex-direction: row;
-  height: 100%; /* 높이를 100%로 설정하여 부모 높이에 맞춤 */
-  overflow: visible; /* 필요 시에만 스크롤을 보이도록 변경 */
+  height: 100%; /* 부모 높이에 맞춤 */
+  overflow: hidden; /* 스크롤 제거 */
+  width: 100%; /* 전체 화면 너비 사용 */
 }
 
+/* LeftPanel과 RightPanel 스타일 */
 .left-panel,
 .right-panel {
-  flex: 1;
+  flex: 1; /* 동일한 비율로 크기 조정 */
   padding: 20px;
-  overflow: visible; /* 스크롤 제거하여 모두 보이도록 설정 */
-  box-sizing: border-box;
+  overflow: auto; /* 내용이 넘칠 경우 스크롤 */
+  box-sizing: border-box; /* 패딩 포함 크기 계산 */
+  min-width: 0; /* Flexbox 축소를 방해하지 않도록 설정 */
 }
+
 /* 정책 카드 스타일 */
 .action-cards {
   display: flex;
@@ -331,18 +336,26 @@
   color: #4a4a4a;
   text-align: center;
 }
-
+.left-panel,
+.right-panel {
+  flex: 1; /* 동일한 비율로 크기를 조정 */
+  padding: 20px;
+  overflow: auto; /* 내용이 넘칠 경우 스크롤 표시 */
+  box-sizing: border-box; /* 패딩 포함 크기 계산 */
+}
+/* 반응형 설정 */
 /* 반응형 설정 */
 @media (max-width: 767px) {
   .main-content {
-    flex-direction: column;
-    height: auto;
+    flex-direction: column; /* 모바일에서는 상하 배치 */
   }
 
-  .left-panel, .right-panel {
-    width: 100%;
-    padding: 10px;
+  .left-panel,
+  .right-panel {
+    min-width: 100%; /* 화면 크기에서 동일한 너비로 확장 */
+    flex: none; /* 모바일에서 크기 고정 */
   }
+
 
   .header {
     flex-direction: row;
@@ -353,6 +366,7 @@
   .poliLogo {
     width: 150px;
     max-width: 100%;
+    cursor: pointer; 
   }
 
   .menu {
