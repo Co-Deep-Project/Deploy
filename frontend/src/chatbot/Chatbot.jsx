@@ -112,6 +112,11 @@ const Chatbot = () => {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSend();
+                }
+              }}
               placeholder="메시지를 입력하세요..."
               className="chatbot-input"
             />
