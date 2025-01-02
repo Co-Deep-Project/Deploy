@@ -2,8 +2,18 @@ import React, { useState, useEffect } from "react";
 import "./Chatbot.css";
 
 const Chatbot = () => {
+  // 챗봇 초기 안내 멘트
+  const initialMessages = [
+    { 
+      sender: "bot", 
+      text: `안녕하세요! 👋 저는 POLITRACKER 챗봇입니다.
+  정치 뉴스부터 어려운 정치 용어까지, 정치에 관한 모든 궁금증을 쉽게 설명해드릴게요! 💭
+  최신 정치 소식이 궁금하시거나 잘 모르는 정치 용어가 있다면 언제든 편하게 물어보세요. 📚✨`
+    }
+  ];  
+
   const [isOpen, setIsOpen] = useState(false); // 챗봇 열림/닫힘 상태
-  const [messages, setMessages] = useState([]); // 챗봇 메시지 상태
+  const [messages, setMessages] = useState(initialMessages); // 챗봇 메시지 상태
   const [inputValue, setInputValue] = useState(""); // 채팅 입력 상태
   const [news, setNews] = useState([]); // 뉴스 데이터 상태
 
