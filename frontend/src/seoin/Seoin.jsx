@@ -8,8 +8,9 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 const Seoin = () => {
   const navigate = useNavigate();
@@ -126,36 +127,46 @@ const CommitteePieChart = ({ bills }) => {
   const options = {
     plugins: {
       legend: {
-        display: true,
-        position: "top",
+        display: false, // 범례 표시
+        position: "top", // 범례 위치 (top, bottom, left, right)
         labels: {
-          boxWidth: 20,
-          generateLabels: (chart) => {
-            const data = chart.data;
-            const total = data.datasets[0].data.reduce((sum, value) => sum + value, 0);
-
-            return data.labels.map((label, index) => {
-              const value = data.datasets[0].data[index];
-              const percentage = ((value / total) * 100).toFixed(1);
-              return {
-                text: `${label} (${percentage}%)`,
-                fillStyle: data.datasets[0].backgroundColor[index],
-                hidden: !chart.isDatasetVisible(0),
-              };
-            });
+          boxWidth: 20, // 범례 아이콘 크기
+          padding: 10, // 텍스트와 박스 사이 여백
+          font: {
+            size: 12, // 글씨 크기
           },
         },
+      },
+      datalabels: {
+        color: "#000", // 텍스트 색상
+        font: {
+          size: 12,
+        },
+        formatter: (value, context) => {
+          const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+          return `${context.chart.data.labels[context.dataIndex]} (${percentage}%)`;
+        },
+        anchor: "end",
+        align: "end",
+        offset: 10,
+      },
+    },
+    layout: {
+      padding: {
+        top: 20, // 위쪽 여백
+        bottom: -20, // 아래쪽 여백
       },
     },
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: shouldAnimate ? 800 : 0  
-    }
-  };
+      duration: shouldAnimate ? 800 : 0,
+    },
+  };  
 
   return (
-    <div style={{ width: "500px", height: "400px", margin: "0 auto" }}>
+    <div style={{ width: "700px", height: "300px", margin: "40px auto" }}>
       <Pie data={chartData} options={options} />
     </div>
   );
@@ -250,13 +261,6 @@ const CommitteePieChart = ({ bills }) => {
       </div>
 
       <main className="main-layout">
-      {activeTab === "bills" && (
-        <div className="chart-container">
-          <h2>소관위원회별 공동발의 법안 분포</h2>
-          <CommitteePieChart bills={bills} />
-        </div>
-      )}
-
         <div className="tab-container">
           <button
             className={`tab-button ${activeTab === "votes" ? "active" : ""}`}
@@ -273,6 +277,12 @@ const CommitteePieChart = ({ bills }) => {
         </div>
 
         <div id="process-block" className="process-block">
+          {activeTab === "bills" && (
+            <div className="chart-container">
+              <h2>소관위원회별 공동발의 법안 분포</h2>
+              <CommitteePieChart bills={bills} />
+            </div>
+          )}
           {activeTab === "votes" && (
               <div className="legend-container">
                 <span className="legend-item legend-approve">찬성</span>

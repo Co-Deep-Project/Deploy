@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Axios 추가
 import "./Chatbot.css";
 
 const Chatbot = () => {
@@ -10,69 +9,77 @@ const Chatbot = () => {
 
   const toggleChatbot = () => setIsOpen(!isOpen); // 챗봇 열기/닫기
 
-  // 뉴스 데이터를 가져오는 useEffect
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await axios.post("http://127.0.0.1:5001/news", {
-          query: "종로구",
+        const response = await fetch("http://localhost:8001/search_news", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json", // 반드시 JSON 형식으로 설정
+          },
+          body: JSON.stringify({ query: "종로구" }), // FastAPI에서 기대하는 JSON 형식
         });
-        console.log("Fetched news:", response.data); // Flask에서 반환된 데이터 확인
-        setNews(response.data); // uniqueNews가 아니라 response.data를 사용
+    
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        const data = await response.json();
+        console.log("Fetched news data:", data); // 응답 확인
+        setNews(data.response); // FastAPI가 반환하는 데이터 처리
       } catch (error) {
-        console.error("Error fetching news:", error.response || error.message);
+        console.error("Error fetching news:", error.message);
+        setNews([]); // 에러 발생 시 빈 배열로 초기화
       }
     };
+    
   
     fetchNews();
   }, []);  
-  
 
-  // 사용자 입력 처리 및 백엔드와 통신
+  // 챗봇 메시지 전송
   const handleSend = async () => {
     if (inputValue.trim() === "") return;
-  
+
     const userMessage = { sender: "user", text: inputValue };
     setMessages((prev) => [...prev, userMessage]);
-  
+
     try {
-      const response = await axios.post("http://127.0.0.1:5001/chat", {
-        message: inputValue,
+      const response = await fetch("http://localhost:8001/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: inputValue }),
+        
       });
-  
-      const botResponse = { sender: "bot", text: response.data.response };
-      setMessages((prev) => [...prev, botResponse]);
+
+      const data = await response.json();
+      const botMessage = { sender: "bot", text: data.response };
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      console.error("Error communicating with backend:", error.response || error.message);
-      const botResponse = { sender: "bot", text: "서버와 연결할 수 없습니다." };
-      setMessages((prev) => [...prev, botResponse]);
+      console.error("Error communicating with chatbot:", error);
+      const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요." };
+      setMessages((prev) => [...prev, errorMessage]);
     }
-  
-    setInputValue(""); // 입력창 초기화
+
+    setInputValue(""); // 입력 초기화
   };
-  
 
   return (
     <div className="chatbot-container">
       {/* 뉴스 섹션 */}
       <div className="news-container">
-        <h1 className="news-header">최신 뉴스</h1>
-        <div className="news-cards">
-          {news.map((item, index) => (
-            <div key={index} className="news-card">
-              <h2 className="news-title">{item.headline}</h2>
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="news-button"
-              >
-                더 보기
-              </a>
-            </div>
-          ))}
-        </div>
+  <h1 className="news-header">최신 뉴스</h1>
+  <div className="news-cards">
+    {news.map((item) => (
+      <div key={item.id} className="news-card">
+        <h2 className="news-title">{item.title}</h2>
+        <p className="news-description">{item.description}</p>
+        <a href="#!" className="news-button">더 보기</a> {/* 링크 추가 */}
       </div>
+    ))}
+  </div>
+</div>
+
 
       {/* 챗봇 버튼 */}
       {!isOpen && (
