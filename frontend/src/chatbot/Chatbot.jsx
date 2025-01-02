@@ -37,6 +37,15 @@ const Chatbot = () => {
     fetchNews();
   }, []);  
 
+  // 챗봇이 응답한 뉴스 데이터의 경우 제목 기준으로 데이터 분리
+  const parseChatbotNews = (response) => {
+    const items = response.split("제목:").filter((item) => item.trim() !== "");
+    return items.map((item) => {
+      const [title, link] = item.split("링크:").map((part) => part.trim());
+      return { title, link };
+    });
+  };
+
   // 챗봇 메시지 전송
   const handleSend = async () => {
     if (inputValue.trim() === "") return;
@@ -53,13 +62,21 @@ const Chatbot = () => {
       });
 
       const data = await response.json();
-      const botMessage = { sender: "bot", text: data.response };
+    const chatbotResponse = data.response;
+
+    if (inputValue.includes("뉴스")) {
+      const newsItems = parseChatbotNews(chatbotResponse);
+      const botMessage = { sender: "bot", newsItems }; // 뉴스 데이터를 배열로 저장
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Error communicating with chatbot:", error);
-      const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요." };
-      setMessages((prev) => [...prev, errorMessage]);
+    } else {
+      const botMessage = { sender: "bot", text: chatbotResponse };
+      setMessages((prev) => [...prev, botMessage]);
     }
+  } catch (error) {
+    console.error("Error communicating with chatbot:", error);
+    const errorMessage = { sender: "bot", text: "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요." };
+    setMessages((prev) => [...prev, errorMessage]);
+  }
 
     setInputValue(""); // 입력 초기화
   };
@@ -99,11 +116,31 @@ const Chatbot = () => {
           </div>
           <div className="chatbot-messages">
             {messages.map((message, index) => (
-              <div
-                key={index}
+              <div 
+                key={index} 
                 className={`chatbot-message ${message.sender === "user" ? "user" : "bot"}`}
               >
-                {message.text}
+                {message.newsItems ? (
+                  // 뉴스 데이터가 있을 경우 박스 형태로 렌더링
+                  <div className="chatbot-news-cards">
+                    {message.newsItems.map((news, i) => (
+                      <div key={i} className="chatbot-news-card">
+                        <h2 className="chatbot-news-title">{news.title}</h2>
+                        <a
+                          href={news.link}
+                          className="chatbot-news-link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          더 보기
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  // 일반 메시지 렌더링
+                  <div>{message.text}</div>
+                )}
               </div>
             ))}
           </div>
@@ -113,7 +150,7 @@ const Chatbot = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.repeat) {
                   handleSend();
                 }
               }}
