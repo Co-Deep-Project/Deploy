@@ -34,7 +34,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["https://backend-three-theta-46.vercel.app/"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
