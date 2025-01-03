@@ -24,11 +24,7 @@ const Seoin = () => {
 
   const ITEMS_PER_PAGE = 3;
   const memberName = "곽상언";
-
-  // FastAPI 서버 URL (환경 변수에서 가져옴)
-  // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   
-
   const fetchVotesFromServer = async () => {
     setVotesLoading(true);
     try {
