@@ -22,7 +22,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch("http://localhost:8001/search_news", {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND2_URL}/search_news`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json", // 반드시 JSON 형식으로 설정
@@ -72,7 +72,7 @@ const Chatbot = () => {
       const currentInput = inputValue; // 현재 입력값 저장
       setInputValue(""); // 입력 초기화를 먼저 수행
       
-      const response = await fetch("http://localhost:8001/chatbot", {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND2_URL}/chatbot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: currentInput }),
