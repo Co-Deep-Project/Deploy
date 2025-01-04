@@ -37,6 +37,10 @@ const Seoin = () => {
         // 로딩 중이면 "데이터를 불러오는 중..." 메시지를 유지하고 2초 후 다시 요청
         setTimeout(fetchVotesFromServer, 2000);
         return;
+      } else {
+        // 실제 데이터를 받아왔으므로 votes에 저장
+        setVotes(data);
+        setVotesLoading(false);
       }
   
 
@@ -62,8 +66,15 @@ const Seoin = () => {
           // 로딩 중이면 "데이터를 불러오는 중..." 메시지를 유지하고 2초 후 다시 요청
           setTimeout(fetchBillsFromServer, 2000);
           return;
+        } else {
+          // 실제 데이터를 받아왔으므로 bills에 저장
+          // 여기서 최신순 정렬도 진행
+          const sortedBills = data.sort(
+            (a, b) => new Date(b.propose_date) - new Date(a.propose_date)
+          );
+          setBills(sortedBills);
+          setBillsLoading(false);
         }
-
         // 최신순 정렬
         const sortedBills = data.sort((a, b) => new Date(b.propose_date) - new Date(a.propose_date));
         setBills(sortedBills);
@@ -72,6 +83,7 @@ const Seoin = () => {
         }
     } catch (error) {
         console.error("서버 요청 오류:", error);
+        setBillsLoading(false);
     }
     setBillsLoading(false);
 };
@@ -305,13 +317,13 @@ const CommitteePieChart = ({ bills }) => {
               <span className="legend-item legend-against">공동발의 의안</span>
             </div>
           )}
-          {isLoading ? (
-            <p>데이터를 불러오는 중...</p>
-          ) : displayData.length === 0 ? (
-            <p>데이터가 없습니다.</p>
-          ) : activeTab === "votes" ? (
-            displayData.map((vote, index) => {
-              const displayNumber = votes.length - index;
+            {isLoading ? (
+              <p>데이터를 불러오는 중...</p>  // 로딩 중일 때는 무조건 이 메시지 출력
+            ) : displayData.length === 0 && !isLoading ? (
+              <p>데이터가 없습니다.</p>  // 로딩이 끝났고 데이터가 없을 때만 이 메시지 출력
+            ) : activeTab === "votes" ? (
+              displayData.map((vote, index) => {
+                        const displayNumber = votes.length - index;
               return (
                 <div
                   key={index}
