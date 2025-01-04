@@ -10,6 +10,7 @@ from openai import Client
 from fuzzywuzzy import fuzz
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Response
 
 
 
@@ -142,17 +143,23 @@ async def handle_query(user_query):
 
     else:
         return generate_response(user_query)
-    
-
+     
 
 
 @app.get("/")
 def root():
     return {"message": "Hello from chatbot server!"}
 
-@app.options("/{rest_of_path:path}")
-async def preflight_handler():
-    return JSONResponse(status_code=200)
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        }
+    )
 
 @app.options("/search_news")
 async def options_search_news():
