@@ -31,11 +31,11 @@ jobs:
       run: |
         echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
 
-    - name: Deploy to Heroku
+    - name: Build and Push to Heroku Container Registry
       run: |
         cd backend
-        git init
-        heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
-        git add .
-        git commit -m "Deploying to Heroku"
-        git push heroku main --force
+        heroku container:push web --app ${{ secrets.HEROKU_APP_NAME }}
+
+    - name: Release Heroku App
+      run: |
+        heroku container:release web --app ${{ secrets.HEROKU_APP_NAME }}
