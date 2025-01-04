@@ -5,14 +5,8 @@ on:
     branches:
       - main  # main 브랜치에 푸시될 때 실행
     paths:
-      - 'backend/**' 
+      - 'backend/**'
 
-  workflow_dispatch:  # 수동으로 실행 가능
-    inputs:
-      environment:
-        description: 'Choose the environment to deploy'
-        required: true
-        default: 'production'
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -31,10 +25,17 @@ jobs:
         cd backend
         pip install -r requirements.txt
 
-    - name: Deploy to Heroku
+    - name: Authenticate with Heroku
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       run: |
-        echo $HEROKU_API_KEY | heroku auth:token
-        git push https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git HEAD:refs/heads/main --force
+        echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
 
+    - name: Deploy to Heroku
+      run: |
+        cd backend
+        git init
+        heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+        git add .
+        git commit -m "Deploying to Heroku"
+        git push heroku main --force
