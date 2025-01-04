@@ -7,4 +7,6 @@ openai
 beautifulsoup4
 webdriver-manager
 selenium
+pydantic
 fuzzywuzzy
+python-Levenshtein

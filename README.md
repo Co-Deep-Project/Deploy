@@ -7,8 +7,11 @@
 ## Co-Deep Project backend
 
 - python 가상환경 실행 `source myenv/bin/activate`
-- FastAPI 트래킹 서버 실행 명령: `uvicorn backend.server:app --host 0.0.0.0 --port 8000`
-- FastAPI 챗봇 서버 실행 명령: `uvicorn backend.chatbot_server:app --host 0.0.0.0 --port 8001`
+
+실행 경로 : `cd frontend`
+- FastAPI 트래킹 서버 실행 명령: `uvicorn server:app --host 0.0.0.0 --port 8000`
+- FastAPI 챗봇 서버 실행 명령: `uvicorn chatbot_server:app --host 0.0.0.0 --port 8001`
+
 
 ## home 브랜치 (가현)
 ### 변경사항
