@@ -154,30 +154,30 @@ def root():
     return {"message": "Hello from chatbot server!"}
 
 
-@app.options("/{path:path}")
-async def preflight_handler():
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-            "Access-Control-Allow-Credentials": "true",
-        },
-    )
+# @app.options("/{path:path}")
+# async def preflight_handler():
+#     return Response(
+#         status_code=200,
+#         headers={
+#             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
+#             "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+#             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+#             "Access-Control-Allow-Credentials": "true",
+#         },
+#     )
 
 
-@app.options("/search_news")
-async def options_search_news():
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-            "Access-Control-Allow-Credentials": "true",
-        }
-    )
+# @app.options("/search_news")
+# async def options_search_news():
+#     return Response(
+#         status_code=200,
+#         headers={
+#             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
+#             "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+#             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+#             "Access-Control-Allow-Credentials": "true",
+#         }
+#     )
 
 
 @app.post("/search_news")
@@ -205,17 +205,17 @@ async def ask_gpt_endpoint(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.options("/chatbot")
-async def options_chatbot():
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-            "Access-Control-Allow-Credentials": "true",
-        }
-    )
+# @app.options("/chatbot")
+# async def options_chatbot():
+#     return Response(
+#         status_code=200,
+#         headers={
+#             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
+#             "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+#             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+#             "Access-Control-Allow-Credentials": "true",
+#         }
+#     )
 
 
 @app.post("/chatbot")
