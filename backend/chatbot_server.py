@@ -23,10 +23,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://backend-three-theta-46.vercel.app", "http://localhost:3000"],
+    allow_origins=["https://backend-three-theta-46.vercel.app"],  # 명확한 origin 유지
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"], 
-    allow_headers=["Content-Type", "Authorization", "Accept"],  
+    allow_methods=[	"DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"], 
+    allow_headers=["Content-Type", "Authorization", "Accept"],
 )
 
 class QueryRequest(BaseModel):
