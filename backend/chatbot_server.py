@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai import Client
 from fuzzywuzzy import fuzz
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
 
 load_dotenv()
@@ -21,7 +22,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://backend-three-theta-46.vercel.app", "http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -145,6 +146,12 @@ async def handle_query(user_query):
 def root():
     return {"message": "Hello from chatbot server!"}
 
+@app.options("/search_news")
+async def options_search_news():
+    """
+    OPTIONS preflight 요청을 처리하는 엔드포인트
+    """
+    return JSONResponse(content={}, status_code=200)
 
 
 @app.post("/search_news")
@@ -152,8 +159,8 @@ async def search_news_endpoint(request: QueryRequest):
     keyword = request.query.replace("뉴스", "").strip()
     news_results = search_news(keyword)
     
-    if "error" in news_results:
-        raise HTTPException(status_code=500, detail=news_results["message"])
+    if not news_results:
+        raise HTTPException(status_code=404, detail="No news found")
     
     formatted_results = []
     for item in news_results.get("items", []):
