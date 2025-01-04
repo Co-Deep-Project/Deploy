@@ -23,10 +23,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://backend-three-theta-46.vercel.app"],  # 명확한 origin 유지
+    allow_origins=["https://backend-three-theta-46.vercel.app"],  
     allow_credentials=True,
     allow_methods=[	"DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"], 
-    allow_headers=["Content-Type", "Authorization", "Accept"],
+    allow_headers=["content-type", "authorization", "accept"],
 )
 
 class QueryRequest(BaseModel):
@@ -169,7 +169,7 @@ async def options_search_news():
         status_code=200,
         headers={
             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
             "Access-Control-Allow-Credentials": "true",
         }
@@ -207,11 +207,12 @@ async def options_chatbot():
         status_code=200,
         headers={
             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
             "Access-Control-Allow-Credentials": "true",
         }
     )
+
 
 @app.post("/chatbot")
 async def chatbot_endpoint(request: QueryRequest):
