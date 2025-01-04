@@ -16,37 +16,38 @@ const Chatbot = () => {
   const [messages, setMessages] = useState(initialMessages); // 챗봇 메시지 상태
   const [inputValue, setInputValue] = useState(""); // 채팅 입력 상태
   const [news, setNews] = useState([]); // 뉴스 데이터 상태
+  const [selectedDistrict, setSelectedDistrict] = useState("종로구");
 
   const toggleChatbot = () => setIsOpen(!isOpen); // 챗봇 열기/닫기
 
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND2_URL}/search_news`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json", // 반드시 JSON 형식으로 설정
-          },
-          credentials: 'include',  
-          body: JSON.stringify({ query: "종로구" }), // FastAPI에서 기대하는 JSON 형식
-        });
+  const fetchNews = async (district) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND2_URL}/search_news`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',  
+        body: JSON.stringify({ query: district }), // 선택된 구를 쿼리로 사용
+      });
     
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-    
-        const data = await response.json();
-        console.log("Fetched news data:", data); // 응답 확인
-        setNews(data.response); // FastAPI가 반환하는 데이터 처리
-      } catch (error) {
-        console.error("Error fetching news:", error.message);
-        setNews([]); // 에러 발생 시 빈 배열로 초기화
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
     
-  
-    fetchNews();
-  }, []);  
+      const data = await response.json();
+      console.log("Fetched news data:", data); // 응답 확인
+      setNews(data.response); // FastAPI가 반환하는 데이터 처리
+    } catch (error) {
+      console.error("Error fetching news:", error.message);
+      setNews([]); // 에러 발생 시 빈 배열로 초기화
+    }
+  };
+
+  // 선택된 구가 변경될 때마다 fetchNews 호출
+  useEffect(() => {
+    fetchNews(selectedDistrict);
+  }, [selectedDistrict]); // selectedDistrict가 변경될 때마다 실행
 
   // 챗봇이 응답한 뉴스 데이터의 경우 제목 기준으로 데이터 분리
   const parseChatbotNews = (response) => {
@@ -56,6 +57,8 @@ const Chatbot = () => {
       return { title, link };
     });
   };
+
+  const newsKeywords = ["뉴스", "소식", "기사", "보도", "속보", "최신"];
 
   // 챗봇 메시지 전송
   const handleSend = async () => {
@@ -86,15 +89,17 @@ const Chatbot = () => {
       
       const data = await response.json();
       const chatbotResponse = data.response;
-      
-      if (currentInput.includes("뉴스")) {
+
+      if (newsKeywords.some((word) => currentInput.toLowerCase().includes(word))) {
         const newsItems = parseChatbotNews(chatbotResponse);
         const botMessage = { sender: "bot", newsItems };
         setMessages((prev) => [...prev, botMessage]);
       } else {
+        // 뉴스 키워드가 없을 때만 일반 메시지 추가
         const botMessage = { sender: "bot", text: chatbotResponse };
         setMessages((prev) => [...prev, botMessage]);
       }
+
     } catch (error) {
       console.error("Error communicating with chatbot:", error);
       const errorMessage = {
@@ -111,13 +116,40 @@ const Chatbot = () => {
     <div className="chatbot-container">
       {/* 뉴스 섹션 */}
       <div className="news-container">
-  <h1 className="news-header">최신 뉴스</h1>
+      <div className="news-header-container">
+          <h1 className="news-header">최신 뉴스</h1>
+          {/* 드롭다운 메뉴 */}
+          <select
+            value={selectedDistrict}
+            onChange={(e) => setSelectedDistrict(e.target.value)} // 선택된 구 업데이트
+            className="district-dropdown"
+          >
+            {/* 서울 25개 구 옵션 */}
+            {[
+              "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구",
+              "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구",
+              "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구",
+              "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"
+            ].map((district) => (
+              <option key={district} value={district}>
+                {district}
+              </option>
+            ))}
+          </select>
+        </div>
   <div className="news-cards">
     {news.map((item) => (
       <div key={item.id} className="news-card">
         <h2 className="news-title">{item.title}</h2>
         <p className="news-description">{item.description}</p>
-        <a href="#!" className="news-button">더 보기</a> {/* 링크 추가 */}
+        <a 
+          href={item.link} 
+          className="news-button" 
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          더 보기
+        </a>
       </div>
     ))}
   </div>

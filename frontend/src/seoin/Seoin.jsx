@@ -32,6 +32,14 @@ const Seoin = () => {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`);
       const data = await response.json();
       //console.log("Received vote data:", data); 
+
+      if (data.message === "loading") {
+        // 로딩 중이면 "데이터를 불러오는 중..." 메시지를 유지하고 2초 후 다시 요청
+        setTimeout(fetchVotesFromServer, 2000);
+        return;
+      }
+  
+
       setVotes(data);
       if (activeTab === "votes") {
         setDisplayData(data.slice(0, ITEMS_PER_PAGE));
@@ -49,6 +57,12 @@ const Seoin = () => {
         console.log(`Fetching bills for ${memberName}`); 
         const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/bills_combined?member_name=${memberName}`);
         const data = await response.json();
+
+        if (data.message === "loading") {
+          // 로딩 중이면 "데이터를 불러오는 중..." 메시지를 유지하고 2초 후 다시 요청
+          setTimeout(fetchBillsFromServer, 2000);
+          return;
+        }
 
         // 최신순 정렬
         const sortedBills = data.sort((a, b) => new Date(b.propose_date) - new Date(a.propose_date));

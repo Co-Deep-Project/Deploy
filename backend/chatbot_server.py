@@ -3,6 +3,7 @@ import sys
 import requests
 import openai
 import html
+import re
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -23,7 +24,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://backend-three-theta-46.vercel.app"],
+    allow_origins=["https://backend-three-theta-46.vercel.app", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,11 +46,8 @@ openai.api_key = OPENAI_API_KEY
 # 글로벌 컨텍스트
 session_context = {}
 
+
 def search_news(query, display=50, sort='sim'):
-    """
-    네이버 뉴스 검색 API를 호출하여 뉴스 데이터를 검색하고
-    제목 유사도를 비교하여 중복된 뉴스를 필터링합니다.
-    """
     url = "https://openapi.naver.com/v1/search/news.json"
     headers = {
         "X-Naver-Client-Id": NAVER_CLIENT_ID,
@@ -57,33 +55,47 @@ def search_news(query, display=50, sort='sim'):
     }
     params = {"query": query, "display": display, "sort": sort}
 
-    try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        response.raise_for_status()
+    response = requests.get(url, headers=headers, params=params)
 
-        news_items = response.json().get("items", [])
+    if response.status_code == 200:
+        result_json = response.json()
         
-        # 키워드 필터링: 제목 또는 내용에 키워드 포함 여부 확인
-        filtered_news = [
-            item for item in news_items
-            if query.lower() in item["title"].lower() or query.lower() in item.get("description", "").lower()
-        ]
+        if "items" not in result_json:
+            return result_json
 
-        # 유사도 비교를 통해 중복 뉴스 제거
-        unique_news = []
-        for item in filtered_news:
-            title = html.unescape(item["title"]).replace("<b>", "").replace("</b>", "")
-            if not any(fuzz.ratio(title, existing["headline"]) > 30 for existing in unique_news):
-                unique_news.append({
-                    "headline": title,
-                    "url": item["originallink"] or item["link"]
-                })
+        filtered_items = []
+        for item in result_json["items"]:
+            title = html.unescape(item['title']).replace("<b>", "").replace("</b>", "")
+            description = html.unescape(item['description']).replace("<b>", "").replace("</b>", "")
 
-        return unique_news[:4]  # 최대 4개 반환
+            # (정확 일치) query가 title/description에 포함되어 있는지
+            # if (query.lower() in title.lower()) or (query.lower() in description.lower()):
+            
+            # (부분 일치로 바꾸고 싶다면 ↓ 아래 코드 사용)
+            similarity_title = fuzz.partial_ratio(query.lower(), title.lower())
+            similarity_desc = fuzz.partial_ratio(query.lower(), description.lower())
+            # 예) 50 이상이면 통과
+            if similarity_title >= 50 or similarity_desc >= 40:
+                # 중복 체크
+                is_duplicate = False
+                for f_item in filtered_items:
+                    existing_title = html.unescape(f_item['title']).replace("<b>", "").replace("</b>", "")
+                    similarity_score = fuzz.ratio(title, existing_title)
+                    if similarity_score >= 40:
+                        is_duplicate = True
+                        break
+                
+                if not is_duplicate:
+                    filtered_items.append({
+                        "title": item['title'],
+                        "description": item['description'],
+                        "originallink": item['originallink']
+                    })
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error during news search: {e}")
-        return []
+        result_json["items"] = filtered_items
+        return result_json
+    else:
+        return {"error": response.status_code, "message": response.text}
 
 
 def format_news_results(news_results):
@@ -98,7 +110,6 @@ def format_news_results(news_results):
     formatted_results = []
     for item in news_results['items']:
         title = html.unescape(item['title']).replace("<b>", "").replace("</b>", "")
-        # description = html.unescape(item['description']).replace("<b>", "").replace("</b>", "")
         link = item['originallink']
         formatted_results.append(f"제목: {title}\n링크: {link}\n")
     
@@ -125,25 +136,33 @@ def generate_response(prompt):
 
 
 async def handle_query(user_query):
-    """
-    사용자 쿼리를 처리하여 적절한 응답을 반환합니다.
-    :param user_query: 사용자 입력 쿼리
-    :return: 처리 결과
-    """
     global session_context
 
     if "뉴스" in user_query:
-        keyword = user_query.replace("뉴스", "").strip()
+        # 1) 전부 소문자로 바꾸고
+        temp_query = user_query.lower()
+        # 2) 문장부호 제거
+        temp_query = re.sub(r'[^\w\s]', '', temp_query)
+        # 3) 뉴스/최신/에 대해 알려줘 제거
+        keyword = (temp_query
+                   .replace("뉴스", "")
+                   .replace("최신", "")
+                   .replace("에 대해 알려줘", "")
+                   .strip()
+                  )
+
         news_results = search_news(keyword)
+        if "items" in news_results:
+            news_results["items"] = news_results["items"][:4]
+
         formatted_results = format_news_results(news_results)
-        session_context["last_search"] = keyword  # 맥락 저장
+        session_context["last_search"] = keyword
         return formatted_results
 
     elif "last_search" in session_context:
         keyword = session_context["last_search"]
         prompt = f"{keyword}와 관련된 뉴스에 대해 질문: {user_query}"
         return generate_response(prompt)
-
     else:
         return generate_response(user_query)
      
@@ -154,48 +173,35 @@ def root():
     return {"message": "Hello from chatbot server!"}
 
 
-# @app.options("/{path:path}")
-# async def preflight_handler():
-#     return Response(
-#         status_code=200,
-#         headers={
-#             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-#             "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-#             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-#             "Access-Control-Allow-Credentials": "true",
-#         },
-#     )
-
-
-# @app.options("/search_news")
-# async def options_search_news():
-#     return Response(
-#         status_code=200,
-#         headers={
-#             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-#             "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-#             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-#             "Access-Control-Allow-Credentials": "true",
-#         }
-#     )
-
 
 @app.post("/search_news")
 async def search_news_endpoint(request: QueryRequest):
-    keyword = request.query.replace("뉴스", "").strip()
+    temp_query = request.query.lower()
+    # 문장부호 제거
+    temp_query = re.sub(r'[^\w\s]', '', temp_query)
+    keyword = (temp_query
+               .replace("뉴스", "")
+               .replace("최신", "")
+               .replace("에 대해 알려줘", "")
+               .strip()
+              )
+
     news_results = search_news(keyword)
-    
-    if not news_results:
-        raise HTTPException(status_code=404, detail="No news found")
-    
-    # formatted_results = []
-    # for item in news_results.get("items", []):
-    #     formatted_results.append({
-    #         "title": html.unescape(item["title"]).replace("<b>", "").replace("</b>", ""),
-    #         "description": html.unescape(item["description"]).replace("<b>", "").replace("</b>", ""),
-    #         "link": item["originallink"]
-    #     })
-    return {"response": news_results}
+    if "error" in news_results:
+        raise HTTPException(status_code=500, detail=news_results["message"])
+
+    filtered_items = []
+    for i, item in enumerate(news_results.get("items", [])):
+        if i >= 4:
+            break
+        filtered_items.append({
+            "title": html.unescape(item["title"]).replace("<b>", "").replace("</b>", ""),
+            "description": html.unescape(item["description"]).replace("<b>", "").replace("</b>", ""),
+            "link": item["originallink"]
+        })
+
+    return {"response": filtered_items}
+
 
 @app.post("/ask_gpt")
 async def ask_gpt_endpoint(request: QueryRequest):
@@ -205,31 +211,52 @@ async def ask_gpt_endpoint(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# @app.options("/chatbot")
-# async def options_chatbot():
-#     return Response(
-#         status_code=200,
-#         headers={
-#             "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
-#             "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-#             "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-#             "Access-Control-Allow-Credentials": "true",
-#         }
-#     )
-
 
 @app.post("/chatbot")
 async def chatbot_endpoint(request: QueryRequest):
-    user_query = request.query.lower()
+    """
+    사용자 쿼리에 대해:
+    1) 뉴스 관련 키워드("뉴스", "소식", "기사", "보도", "속보", "최신")가 하나라도 들어있으면,
+       - '뉴스' 등 불필요 단어를 제거한 뒤 검색어로 네이버 뉴스 검색 (최대 4개).
+    2) 그렇지 않으면 ChatGPT(일반 답변)를 생성하여 반환.
+    """
+    import re
     
-    if "뉴스" in user_query:
-        keyword = user_query.replace("뉴스", "").strip()
+    # 1) 사용자 입력을 소문자로 변환
+    user_query = request.query
+    temp_query = user_query.lower()
+    
+    # 2) 문장부호(.,!? 등) 제거
+    temp_query = re.sub(r'[^\w\s]', '', temp_query)
+
+    # 3) 뉴스 관련 키워드 목록
+    news_indicators = ["뉴스", "소식", "기사", "보도", "속보", "최신"]
+
+    # 4) 한 가지라도 들어있으면 뉴스 검색 로직으로 분기
+    if any(word in temp_query for word in news_indicators):
+        # 불필요 단어들 제거 → 핵심 키워드만 추출
+        keyword = (
+            temp_query
+            .replace("뉴스", "")
+            .replace("소식", "")
+            .replace("기사", "")
+            .replace("보도", "")
+            .replace("속보", "")
+            .replace("최신", "")
+            .replace("에 대해 알려줘", "")
+            .strip()
+        )
+
+        # 네이버 뉴스 검색
         news_results = search_news(keyword)
+        if "items" in news_results:
+            # 최대 4개만 추리기
+            news_results["items"] = news_results["items"][:4]
+
+        # 포맷팅된 결과 반환
         formatted_results = format_news_results(news_results)
         return {"response": formatted_results}
 
+    # 5) 뉴스 키워드가 없으면 일반 ChatGPT 응답
     return {"response": generate_response(user_query)}
 
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, debug=True)
