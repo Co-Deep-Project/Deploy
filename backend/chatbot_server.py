@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
 
+
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -142,9 +143,16 @@ async def handle_query(user_query):
     else:
         return generate_response(user_query)
     
+
+
+
 @app.get("/")
 def root():
     return {"message": "Hello from chatbot server!"}
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler():
+    return JSONResponse(status_code=200)
 
 @app.options("/search_news")
 async def options_search_news():
