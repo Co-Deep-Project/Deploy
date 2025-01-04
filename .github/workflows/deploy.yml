@@ -20,6 +20,10 @@ jobs:
       with:
         python-version: 3.9.12 
 
+    - name: Install Heroku CLI  # 💡 Heroku CLI 최신 버전 설치 추가
+      run: |
+        curl https://cli-assets.heroku.com/install.sh | sh
+
     - name: Install dependencies
       run: |
         cd backend
