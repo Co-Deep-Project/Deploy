@@ -24,8 +24,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://backend-three-theta-46.vercel.app", "http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"], 
+    allow_headers=["Content-Type", "Authorization", "Accept"],  
 )
 
 class QueryRequest(BaseModel):
@@ -155,18 +155,19 @@ async def options_handler(path: str):
     return Response(
         status_code=200,
         headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Origin": "https://backend-three-theta-46.vercel.app",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+            "Access-Control-Allow-Credentials": "true",
         }
     )
 
-@app.options("/search_news")
-async def options_search_news():
-    """
-    OPTIONS preflight 요청을 처리하는 엔드포인트
-    """
-    return JSONResponse(content={}, status_code=200)
+# @app.options("/search_news")
+# async def options_search_news():
+#     """
+#     OPTIONS preflight 요청을 처리하는 엔드포인트
+#     """
+#     return JSONResponse(content={}, status_code=200)
 
 
 @app.post("/search_news")
