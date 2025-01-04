@@ -170,14 +170,14 @@ async def search_news_endpoint(request: QueryRequest):
     if not news_results:
         raise HTTPException(status_code=404, detail="No news found")
     
-    formatted_results = []
-    for item in news_results.get("items", []):
-        formatted_results.append({
-            "title": html.unescape(item["title"]).replace("<b>", "").replace("</b>", ""),
-            "description": html.unescape(item["description"]).replace("<b>", "").replace("</b>", ""),
-            "link": item["originallink"]
-        })
-    return {"response": formatted_results}
+    # formatted_results = []
+    # for item in news_results.get("items", []):
+    #     formatted_results.append({
+    #         "title": html.unescape(item["title"]).replace("<b>", "").replace("</b>", ""),
+    #         "description": html.unescape(item["description"]).replace("<b>", "").replace("</b>", ""),
+    #         "link": item["originallink"]
+    #     })
+    return {"response": news_results}
 
 @app.post("/ask_gpt")
 async def ask_gpt_endpoint(request: QueryRequest):

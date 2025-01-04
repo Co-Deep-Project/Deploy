@@ -27,6 +27,7 @@ const Chatbot = () => {
           headers: {
             "Content-Type": "application/json", // 반드시 JSON 형식으로 설정
           },
+          credentials: 'include',  
           body: JSON.stringify({ query: "종로구" }), // FastAPI에서 기대하는 JSON 형식
         });
     
@@ -74,9 +75,14 @@ const Chatbot = () => {
       
       const response = await fetch(`${process.env.REACT_APP_BACKEND2_URL}/chatbot`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: currentInput }),
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: 'include',
+        body: JSON.stringify({ query: inputValue }),
       });
+  
       
       const data = await response.json();
       const chatbotResponse = data.response;
