@@ -3,7 +3,7 @@ name: Deploy to Heroku
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때 실행
+      - main
     paths:
       - 'backend/**'
 
@@ -20,7 +20,7 @@ jobs:
       with:
         python-version: 3.9.12 
 
-    - name: Install Heroku CLI  # 💡 Heroku CLI 최신 버전 설치 추가
+    - name: Install Heroku CLI
       run: |
         curl https://cli-assets.heroku.com/install.sh | sh
 
@@ -29,11 +29,10 @@ jobs:
         cd backend
         pip install -r requirements.txt
 
-    - name: Authenticate with Heroku
+    - name: Login to Heroku
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: |
-        echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
+      run: heroku container:login
 
     - name: Build and Push to Heroku Container Registry
       run: |
