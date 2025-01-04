@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from openai import Client
+from fuzzywuzzy import fuzz
 from pydantic import BaseModel
 
 
@@ -38,13 +39,10 @@ openai.api_key = OPENAI_API_KEY
 # 글로벌 컨텍스트
 session_context = {}
 
-def search_news(query, display=4, sort='sim'):
+def search_news(query, display=50, sort='sim'):
     """
-    네이버 뉴스 검색 API를 호출하여 뉴스 데이터를 검색합니다.
-    :param query: 검색 키워드
-    :param display: 검색 결과 수
-    :param sort: 정렬 기준 ('sim' 또는 'date')
-    :return: 뉴스 검색 결과 JSON
+    네이버 뉴스 검색 API를 호출하여 뉴스 데이터를 검색하고
+    제목 유사도를 비교하여 중복된 뉴스를 필터링합니다.
     """
     url = "https://openapi.naver.com/v1/search/news.json"
     headers = {
@@ -52,12 +50,35 @@ def search_news(query, display=4, sort='sim'):
         "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
     }
     params = {"query": query, "display": display, "sort": sort}
-    response = requests.get(url, headers=headers, params=params)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {"error": response.status_code, "message": response.text}
+
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response.raise_for_status()
+
+        news_items = response.json().get("items", [])
+        
+        # 키워드 필터링: 제목 또는 내용에 키워드 포함 여부 확인
+        filtered_news = [
+            item for item in news_items
+            if query.lower() in item["title"].lower() or query.lower() in item.get("description", "").lower()
+        ]
+
+        # 유사도 비교를 통해 중복 뉴스 제거
+        unique_news = []
+        for item in filtered_news:
+            title = html.unescape(item["title"]).replace("<b>", "").replace("</b>", "")
+            if not any(fuzz.ratio(title, existing["headline"]) > 30 for existing in unique_news):
+                unique_news.append({
+                    "headline": title,
+                    "url": item["originallink"] or item["link"]
+                })
+
+        return unique_news[:4]  # 최대 4개 반환
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error during news search: {e}")
+        return []
+
 
 def format_news_results(news_results):
     """

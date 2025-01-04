@@ -4,7 +4,15 @@ on:
   push:
     branches:
       - main  # main 브랜치에 푸시될 때 실행
+    paths:
+      - 'backend/**' 
 
+  workflow_dispatch:  # 수동으로 실행 가능
+    inputs:
+      environment:
+        description: 'Choose the environment to deploy'
+        required: true
+        default: 'production'
 jobs:
   deploy:
     runs-on: ubuntu-latest
