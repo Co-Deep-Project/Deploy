@@ -3,6 +3,7 @@ import sys
 import requests
 import openai
 import html
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -223,3 +224,7 @@ async def chatbot_endpoint(request: QueryRequest):
         return {"response": formatted_results}
 
     return {"response": generate_response(user_query)}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, debug=True)
