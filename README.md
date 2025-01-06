@@ -1,8 +1,10 @@
 # Co-Deep Project Frontend
 
+실행 경로 : `cd frontend`
+
 `npm start`로 실행됨.
 
-실행 경로 : `cd frontend`
+
 
 ## Co-Deep Project backend
 

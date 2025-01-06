@@ -26,16 +26,16 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, 
 load_dotenv()
 
 # Heroku
-DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql://") + "?sslmode=require"
+# DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql://") + "?sslmode=require"
 
-if "sslmode=require" not in DATABASE_URL:
-    DATABASE_URL += "?sslmode=require"
+# if "sslmode=require" not in DATABASE_URL:
+#     DATABASE_URL += "?sslmode=require"
 
-database = Database(DATABASE_URL, min_size=1, max_size=5)
+# database = Database(DATABASE_URL, min_size=1, max_size=5)
 
 # 로컬테스트 sqlite 사용
-# DATABASE_URL = "sqlite:///./test.db"
-# database = Database(DATABASE_URL)
+DATABASE_URL = "sqlite:///./test.db"
+database = Database(DATABASE_URL)
 
 metadata = MetaData()
 
