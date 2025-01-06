@@ -19,114 +19,78 @@ const Seoin = () => {
   const [displayData, setDisplayData] = useState([]);
   const [expanded, setExpanded] = useState({});
   const [activeTab, setActiveTab] = useState("votes");
-  const [votesLoading, setVotesLoading] = useState(true); // 의안 투표 로딩 상태
-  const [billsLoading, setBillsLoading] = useState(true); // 발의 법률 로딩 상태
-
-  const [polling, setPolling] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
+  const [votesLoading, setVotesLoading] = useState(true);
+  const [billsLoading, setBillsLoading] = useState(true);
 
   const ITEMS_PER_PAGE = 3;
   const memberName = "곽상언";
 
-  console.log("hello world"); 
-
+  // ✅ 서버에 한 번만 데이터를 요청하는 useEffect
   useEffect(() => {
-    const pollStatus = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/status`);
-        const status = await response.json();
-  
-        console.log("Polling 상태 확인:", status);
-  
+        // 상태 체크
+        const statusResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/status`);
+        const status = await statusResponse.json();
+        console.log("서버 상태 확인:", status);
+
         if (status.vote_data_loaded && status.bills_data_loaded) {
-          console.log("모든 데이터 로드 완료 - 즉시 fetch 실행 및 Polling 중지");
-  
-          // ✅ 즉시 fetch 요청
+          console.log("모든 데이터 로드 완료");
+
+          // ✅ 투표 데이터와 법안 데이터 fetch
           await fetchVotesFromServer();
           await fetchBillsFromServer();
-  
-          // ✅ Polling 중지
-          setPolling(false);
         } else {
-          console.log("데이터 로드 중...");
+          console.log("데이터가 아직 로드되지 않았습니다.");
         }
       } catch (error) {
-        console.error("Polling 중 오류 발생. 서버와의 연결이 실패했습니다:", error);
+        console.error("데이터 로드 중 오류 발생:", error);
       }
     };
-  
-    console.log("Polling 시작");
-    const intervalId = setInterval(pollStatus, 30000);
-  
-    // 컴포넌트 언마운트 시 Polling 중지
-    return () => clearInterval(intervalId);
+
+    // ✅ 컴포넌트가 로드될 때 한 번만 fetch 실행
+    fetchData();
   }, []);
-  
-  
 
+  // ✅ Votes 데이터 Fetch 함수
   const fetchVotesFromServer = async () => {
-    setIsFetching(true);
     setVotesLoading(true);
-
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`
       );
       const data = await response.json();
-
-      console.log("Received bills data:", data);
-
-      if (data.message === "loading") {
-        console.log("의안 투표 데이터를 로드 중...");
-        setTimeout(fetchVotesFromServer, 2000);
-        return;
-      } else {
-        setVotes(data);
-        setVotesLoading(false);
-        if (activeTab === "votes") {
-          setDisplayData(data.slice(0, ITEMS_PER_PAGE));
-        }
+      console.log("Received votes data:", data);
+      setVotes(data);
+      if (activeTab === "votes") {
+        setDisplayData(data.slice(0, ITEMS_PER_PAGE));
       }
     } catch (error) {
       console.error("서버 요청 오류:", error);
-      setPolling(true);
     }
     setVotesLoading(false);
-    setIsFetching(false);
   };
 
+  // ✅ Bills 데이터 Fetch 함수
   const fetchBillsFromServer = async () => {
-    setIsFetching(true);
     setBillsLoading(true);
-
     try {
-      console.log("Fetching votes from:", `${process.env.REACT_APP_BACKEND_URL}/api/vote_data?member_name=${memberName}`); 
       const response = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/api/bills_combined?member_name=${memberName}`
       );
       const data = await response.json();
       console.log("Received bills data:", data);
-
-      if (data.message === "loading") {
-        console.log("발의 법률 데이터를 로드 중...");
-        setTimeout(fetchBillsFromServer, 2000);
-        return;
-      } else {
-        const sortedBills = data.sort(
-          (a, b) => new Date(b.propose_date) - new Date(a.propose_date)
-        );
-        setBills(sortedBills);
-        setBillsLoading(false);
-        if (activeTab === "bills") {
-          setDisplayData(sortedBills.slice(0, ITEMS_PER_PAGE));
-        }
+      const sortedBills = data.sort(
+        (a, b) => new Date(b.propose_date) - new Date(a.propose_date)
+      );
+      setBills(sortedBills);
+      if (activeTab === "bills") {
+        setDisplayData(sortedBills.slice(0, ITEMS_PER_PAGE));
       }
     } catch (error) {
       console.error("서버 요청 오류:", error);
-      setPolling(true);
     }
     setBillsLoading(false);
-    setIsFetching(false);
   };
 
 
