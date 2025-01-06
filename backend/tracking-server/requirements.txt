@@ -11,3 +11,10 @@ chromedriver-autoinstaller
 pydantic
 fuzzywuzzy
 python-Levenshtein
+psycopg2-binary
+aiosqlite
+sqlalchemy
+asyncpg
+databases
+fastapi-utils
+typing_inspect

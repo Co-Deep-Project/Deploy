@@ -1,16 +1,20 @@
 # Co-Deep Project Frontend
 
+실행 경로 : `cd frontend`
+
 `npm start`로 실행됨.
 
-실행 경로 : `cd frontend`
+
 
 ## Co-Deep Project backend
 
-- python 가상환경 실행 `source myenv/bin/activate`
+- python 가상환경 실행 : 루트에서 `source myenv/bin/activate`
 
-실행 경로 : `cd frontend`
-- FastAPI 트래킹 서버 실행 명령: `uvicorn server:app --host 0.0.0.0 --port 8000`
-- FastAPI 챗봇 서버 실행 명령: `uvicorn chatbot_server:app --host 0.0.0.0 --port 8001`
+실행 경로 : `cd backend/tracking-server`<br>
+- FastAPI 트래킹 서버 실행 명령:`uvicorn server:app --host 0.0.0.0 --port 8000`
+- FastAPI 챗봇 서버 실행 명령: <br>
+실행 경로 : `cd backend`<br>
+`uvicorn chatbot_server:app --host 0.0.0.0 --port 8001`
 
 
 ## home 브랜치 (가현)
