@@ -135,7 +135,6 @@ async def preload_data():
 
     print("[preload_data] 데이터 로드 시작...")
     await asyncio.gather(preload_vote_data(), preload_bills_data())
-    await asyncio.gather(preload_bills_data())
     vote_data_loaded = True
     bills_data_loaded = True
     print("[preload_data] 데이터 로드 완료.")
