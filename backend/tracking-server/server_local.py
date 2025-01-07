@@ -664,17 +664,24 @@ async def fetch_bills_combined(member_name: str = Query(...)):
         return {"message": "loading"}
 
     # 캐시에 있으면 우선 반환
-    if "bills" in cache:
-        if last_refresh_date == current_date:
-            return cache["bills"]
+    if "bills" not in cache:
+        print("[fetch_bills_combined] 캐시가 비어 있습니다. DB에서 데이터를 가져옵니다.")
+        query = bills_table.select()
+        db_data = await database.fetch_all(query)
+        cache["bills"] = [dict(row) for row in db_data]
+        return cache["bills"]
 
-        if is_refresh_time(current_time):
-            print("[fetch_bills_combined] It's refresh time (4 AM). Fetching new bills data...")
-            bills = await force_fetch_bills_combined(member_name)
-            cache["bills"] = bills
-            last_refresh_date = current_date
-            return bills
-        else:
-            return cache["bills"]
+    # 오늘 이미 새로고침 했다면 캐시 반환
+    if last_refresh_date == current_date:
+        return cache["bills"]
+
+    # 4시가 맞다면 새로고침
+    if is_refresh_time(current_time):
+        print("[fetch_bills_combined] It's refresh time (4 AM). Fetching new bills data...")
+        bills = await force_fetch_bills_combined(member_name)
+        cache["bills"] = bills
+        last_refresh_date = current_date
+        return bills
     else:
-        return {"message": "loading"}
+        # 4시 아니므로 캐시 반환
+        return cache["bills"]

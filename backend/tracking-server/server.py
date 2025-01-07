@@ -65,7 +65,7 @@ votes_table = Table(
     Column("details", Text),            # 크롤링 결과(DETAILS)
 )
 
-cache = TTLCache(maxsize=10000, ttl=14400)
+cache = TTLCache(maxsize=10000, ttl=43200)
 
 
 vote_data_loaded = False
@@ -556,6 +556,18 @@ async def force_fetch_vote_data(member_name: str):
     return vote_data
 
 
+async def get_bills_from_db():
+    print("[get_bills_from_db] 캐시가 비어 있어 DB에서 bill 데이터를 가져옵니다...")
+    query = bills_table.select()
+    db_data = await database.fetch_all(query)
+    return [dict(row) for row in db_data]
+
+async def get_votes_from_db():
+    print("[get_votes_from_db] 캐시가 비어 있어 DB에서 vote 데이터를 가져옵니다...")
+    query = votes_table.select()
+    db_data = await database.fetch_all(query)
+    return [dict(row) for row in db_data]
+
 
 
 # DB 연결: startup / shutdown
@@ -590,6 +602,13 @@ async def startup_event():
     #         await database.execute(update_query)
 
     #     print(f"[retry_failed_summaries] {len(failed_bills)}개의 요약 실패 항목을 재처리했습니다.")
+
+@repeat_every(seconds=86400)  # 하루에 한 번 실행 (새벽 4시)
+async def refresh_data():
+    print("[refresh_data] 새벽 4시: 최신 데이터 로드 중...")
+    await force_fetch_vote_data("곽상언")
+    await force_fetch_bills_combined("곽상언")
+    print("[refresh_data] 새 데이터 로드 완료.")
 
 
 @app.on_event("shutdown")
@@ -633,22 +652,26 @@ async def fetch_vote_data(member_name: str = Query(..., description="Name of the
         return response
 
     # 캐시에 있으면 캐시 반환
-    if "votes" in cache:
-        if last_refresh_date == current_date:
-            response = cache["votes"]
-            print(f"[fetch_vote_data] Returning cached vote data. size={len(response)}")
-            return response
+    if "votes" not in cache:
+        print("[fetch_vote_data] 캐시가 비어 있습니다. DB에서 데이터를 가져옵니다...")
+        db_votes = await get_votes_from_db()
+        cache["votes"] = db_votes
+        return db_votes
 
-        if is_refresh_time(current_time):
-            print("[fetch_vote_data] Refresh time. Fetching new vote data...")
-            votes = await force_fetch_vote_data(member_name)
-            cache["votes"] = votes
-            last_refresh_date = current_date
-            return votes
-        else:
-            return cache["votes"]
-    else:
-        return {"message": "loading"}
+    # 오늘 이미 새로고침 했다면 캐시 반환
+    if last_refresh_date == current_date:
+        return cache["votes"]
+
+    # 4시 새로고침 시 외부 API 호출
+    if is_refresh_time(current_time):
+        print("[fetch_vote_data] It's refresh time (4 AM). Fetching new vote data...")
+        votes = await force_fetch_vote_data(member_name)
+        cache["votes"] = votes
+        last_refresh_date = current_date
+        return votes
+
+    # 기본적으로 캐시 반환
+    return cache["votes"]
 
 
 # Bills API
@@ -664,17 +687,24 @@ async def fetch_bills_combined(member_name: str = Query(...)):
         return {"message": "loading"}
 
     # 캐시에 있으면 우선 반환
-    if "bills" in cache:
-        if last_refresh_date == current_date:
-            return cache["bills"]
+    if "bills" not in cache:
+        print("[fetch_bills_combined] 캐시가 비어 있습니다. DB에서 데이터를 가져옵니다.")
+        query = bills_table.select()
+        db_data = await database.fetch_all(query)
+        cache["bills"] = [dict(row) for row in db_data]
+        return cache["bills"]
 
-        if is_refresh_time(current_time):
-            print("[fetch_bills_combined] It's refresh time (4 AM). Fetching new bills data...")
-            bills = await force_fetch_bills_combined(member_name)
-            cache["bills"] = bills
-            last_refresh_date = current_date
-            return bills
-        else:
-            return cache["bills"]
-    else:
-        return {"message": "loading"}
+    # 오늘 이미 새로고침 했다면 캐시 반환
+    if last_refresh_date == current_date:
+        return cache["bills"]
+
+    # 4시가 맞다면 새로고침
+    if is_refresh_time(current_time):
+        print("[fetch_bills_combined] It's refresh time (4 AM). Fetching new bills data...")
+        bills = await force_fetch_bills_combined(member_name)
+        cache["bills"] = bills
+        last_refresh_date = current_date
+        return bills
+
+    # 기본적으로 캐시 반환
+    return cache["bills"]
