@@ -4,6 +4,7 @@ import requests
 import openai
 import html
 import re
+import datetime
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -46,6 +47,26 @@ openai.api_key = OPENAI_API_KEY
 # 글로벌 컨텍스트
 session_context = {}
 
+# 정치 관련 키워드 리스트
+political_keywords = [
+    # 일반 정치 키워드
+    "정책", "법안", "대통령", "국회의원", "청와대", "정당", "선거", "투표", "외교", "장관", "내각", "개헌", "탄핵", "국회", "총선", "대선", "안보", "국방",
+    # 법률 및 사법 키워드
+    "법원", "헌법", "형법", "민법", "검찰", "대법원", "판결", "입법", "사법", "행정", "법률", "조례", "공청회", "입법예고",
+    # 정책 관련 키워드
+    "복지", "사회보장", "연금", "고용", "교육정책", "환경정책", "경제정책", "부동산정책", "세금", "재정", "지방자치", "지방정부", "공공기관", "정부예산", "규제완화", "정부지원", "청년정책",
+    # 외교 및 국제정세 키워드
+    "외교부", "국제회의", "유엔", "조약", "동맹", "평화협정", "국제분쟁", "무역협정", "비자정책", "외교관", "대사", "국제기구", "국제법",
+    # 경제 및 금융 키워드
+    "경제", "금융정책", "재정정책", "통화정책", "환율", "무역", "수출입", "통상", "경제협력", "부채", "금융시장", "투자", "소득", "세금개혁",
+    # 사회 및 복지 키워드
+    "사회복지", "국민건강보험", "고용보험", "실업급여", "저출산", "노인복지", "장애인복지", "기초생활보장", "공공주택", "교육개혁", "보육정책", "저소득층지원",
+    # 안보 및 국방 키워드
+    "국방부", "군대", "군사훈련", "안보협력", "북핵", "군비감축", "평화유지", "방위산업", "사이버안보", "군사정책", "방위비", "군사전략",
+    # 기타 정치 관련 키워드
+    "정세", "정부", "행정개혁", "리더십", "사회운동", "공약", "여론조사", "정책분석", "시민단체", "정치운동", "언론자유", "인권", "국가비전", "개발계획", "사업", "구청"
+]
+
 
 def search_news(query, display=50, sort='sim'):
     url = "https://openapi.naver.com/v1/search/news.json"
@@ -59,51 +80,71 @@ def search_news(query, display=50, sort='sim'):
 
     if response.status_code == 200:
         result_json = response.json()
-        
         if "items" not in result_json:
             return result_json
 
+        # 검색어에 "정치" 키워드가 포함되어 있는지 확인
+        is_political_query = "정치" in query.lower()
+
         filtered_items = []
+        today = datetime.datetime.now(datetime.timezone.utc)
+
         for item in result_json["items"]:
             title = html.unescape(item['title']).replace("<b>", "").replace("</b>", "")
             description = html.unescape(item['description']).replace("<b>", "").replace("</b>", "")
+            pub_date = item.get('pubDate', '')
 
-            # (정확 일치) query가 title/description에 포함되어 있는지
-            # if (query.lower() in title.lower()) or (query.lower() in description.lower()):
-            
-            # (부분 일치로 바꾸고 싶다면 ↓ 아래 코드 사용)
-            similarity_title = fuzz.partial_ratio(query.lower(), title.lower())
-            similarity_desc = fuzz.partial_ratio(query.lower(), description.lower())
-            # 예) 50 이상이면 통과
-            if similarity_title >= 50 or similarity_desc >= 40:
-                # 중복 체크
-                is_duplicate = False
-                for f_item in filtered_items:
-                    existing_title = html.unescape(f_item['title']).replace("<b>", "").replace("</b>", "")
-                    similarity_score = fuzz.ratio(title, existing_title)
-                    if similarity_score >= 40:
-                        is_duplicate = True
-                        break
-                
-                if not is_duplicate:
-                    filtered_items.append({
-                        "title": item['title'],
-                        "description": item['description'],
-                        "originallink": item['originallink']
-                    })
+            # 날짜 필터링
+            pub_date_obj = datetime.datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S %z')
+            days_diff = (today - pub_date_obj).days
 
-        result_json["items"] = filtered_items
+            # 최신 뉴스 조건: 최근 30일 이내
+            if days_diff <= 30:
+                # 중복 검사
+                similarity_title = fuzz.partial_ratio(query.lower(), title.lower())
+                similarity_desc = fuzz.partial_ratio(query.lower(), description.lower())
+
+                if similarity_title >= 50 or similarity_desc >= 40:
+                    is_duplicate = False
+                    for f_item in filtered_items:
+                        existing_title = html.unescape(f_item['title']).replace("<b>", "").replace("</b>", "")
+                        similarity_score = fuzz.ratio(title, existing_title)
+                        if similarity_score >= 40:
+                            is_duplicate = True
+                            break
+
+                    if not is_duplicate:
+                        # 정치 관련 질문일 때만 정치 뉴스 필터링 적용
+                        if is_political_query:
+                            content = f"{title} {description}".lower()
+                            keyword_count = sum(1 for keyword in political_keywords if keyword in content)
+                            if keyword_count >= 2:
+                                filtered_items.append({
+                                    "title": item['title'],
+                                    "description": item['description'],
+                                    "originallink": item['originallink'],
+                                    "pubDate": pub_date
+                                })
+                        else:
+                            # 정치 질문이 아니면 모든 뉴스 추가
+                            filtered_items.append({
+                                "title": item['title'],
+                                "description": item['description'],
+                                "originallink": item['originallink'],
+                                "pubDate": pub_date
+                            })
+
+        # 최신순 정렬 추가
+        filtered_items.sort(key=lambda x: datetime.datetime.strptime(x['pubDate'], '%a, %d %b %Y %H:%M:%S %z'), reverse=True)
+
+        result_json["items"] = filtered_items[:4]  # 최대 4개만 반환
         return result_json
     else:
         return {"error": response.status_code, "message": response.text}
 
 
+
 def format_news_results(news_results):
-    """
-    뉴스 검색 결과를 포맷팅하여 사용자에게 표시할 텍스트로 변환합니다.
-    :param news_results: 뉴스 검색 결과 JSON
-    :return: 포맷팅된 텍스트
-    """
     if not news_results or "items" not in news_results:
         return "검색 결과를 찾을 수 없습니다."
     
@@ -119,13 +160,8 @@ def format_news_results(news_results):
 client = Client(api_key=OPENAI_API_KEY)
 
 def generate_response(prompt):
-    """
-    OpenAI ChatGPT API를 호출하여 응답을 생성합니다.
-    :param prompt: 사용자 입력 프롬프트
-    :return: ChatGPT의 응답
-    """
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
@@ -139,19 +175,19 @@ async def handle_query(user_query):
     global session_context
 
     if "뉴스" in user_query:
-        # 1) 전부 소문자로 바꾸고
         temp_query = user_query.lower()
-        # 2) 문장부호 제거
         temp_query = re.sub(r'[^\w\s]', '', temp_query)
-        # 3) 뉴스/최신/에 대해 알려줘 제거
-        keyword = (temp_query
-                   .replace("뉴스", "")
-                   .replace("최신", "")
-                   .replace("에 대해 알려줘", "")
-                   .strip()
-                  )
 
-        news_results = search_news(keyword)
+        # 기본 관련도순 정렬 유지
+        sort = 'sim'
+
+        # 최신 키워드가 있으면 내부 정렬을 위해 날짜순 추가 정렬
+        if "최신" in temp_query:
+            sort = 'sim'  # 기본은 관련도순으로 유지
+
+        keyword = temp_query.replace("뉴스", "").replace("에 대해 알려줘", "").strip()
+
+        news_results = search_news(keyword, sort=sort)
         if "items" in news_results:
             news_results["items"] = news_results["items"][:4]
 
@@ -165,6 +201,8 @@ async def handle_query(user_query):
         return generate_response(prompt)
     else:
         return generate_response(user_query)
+
+
      
 
 
@@ -177,16 +215,16 @@ def root():
 @app.post("/search_news")
 async def search_news_endpoint(request: QueryRequest):
     temp_query = request.query.lower()
-    # 문장부호 제거
     temp_query = re.sub(r'[^\w\s]', '', temp_query)
-    keyword = (temp_query
-               .replace("뉴스", "")
-               .replace("최신", "")
-               .replace("에 대해 알려줘", "")
-               .strip()
-              )
 
-    news_results = search_news(keyword)
+    # 기본 관련도순 정렬 유지
+    sort = 'sim'
+
+    is_latest = "최신" in temp_query
+
+    keyword = temp_query.replace("뉴스", "").replace("에 대해 알려줘", "").strip()
+
+    news_results = search_news(keyword, sort=sort)
     if "error" in news_results:
         raise HTTPException(status_code=500, detail=news_results["message"])
 
@@ -200,7 +238,11 @@ async def search_news_endpoint(request: QueryRequest):
             "link": item["originallink"]
         })
 
+    if is_latest:
+        filtered_items.sort(key=lambda x: datetime.datetime.strptime(x['pubDate'], '%a, %d %b %Y %H:%M:%S %z'), reverse=True)
+
     return {"response": filtered_items}
+
 
 
 @app.post("/ask_gpt")
@@ -214,15 +256,7 @@ async def ask_gpt_endpoint(request: QueryRequest):
 
 @app.post("/chatbot")
 async def chatbot_endpoint(request: QueryRequest):
-    """
-    사용자 쿼리에 대해:
-    1) 뉴스 관련 키워드("뉴스", "소식", "기사", "보도", "속보", "최신")가 하나라도 들어있으면,
-       - '뉴스' 등 불필요 단어를 제거한 뒤 검색어로 네이버 뉴스 검색 (최대 4개).
-    2) 그렇지 않으면 ChatGPT(일반 답변)를 생성하여 반환.
-    """
-    import re
-    
-    # 1) 사용자 입력을 소문자로 변환
+
     user_query = request.query
     temp_query = user_query.lower()
     
@@ -242,7 +276,6 @@ async def chatbot_endpoint(request: QueryRequest):
             .replace("기사", "")
             .replace("보도", "")
             .replace("속보", "")
-            .replace("최신", "")
             .replace("에 대해 알려줘", "")
             .strip()
         )
@@ -259,4 +292,5 @@ async def chatbot_endpoint(request: QueryRequest):
 
     # 5) 뉴스 키워드가 없으면 일반 ChatGPT 응답
     return {"response": generate_response(user_query)}
+
 
