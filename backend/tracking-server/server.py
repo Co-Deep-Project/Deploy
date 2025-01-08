@@ -87,7 +87,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://backend-three-theta-46.vercel.app"],
+    allow_origins=["http://localhost:3000", "https://politrackers.vercel.app", "https://politracker.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

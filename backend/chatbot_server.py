@@ -25,7 +25,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://backend-three-theta-46.vercel.app", "http://localhost:3000"],
+    allow_origins=["https://politrackers.vercel.app", "http://localhost:3000", "https://politracker.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -256,29 +256,32 @@ async def ask_gpt_endpoint(request: QueryRequest):
 
 @app.post("/chatbot")
 async def chatbot_endpoint(request: QueryRequest):
-
     user_query = request.query
     temp_query = user_query.lower()
     
-    # 2) 문장부호(.,!? 등) 제거
+    # 문장부호(.,!? 등) 제거
     temp_query = re.sub(r'[^\w\s]', '', temp_query)
 
-    # 3) 뉴스 관련 키워드 목록
+    # 뉴스 관련 키워드 목록
     news_indicators = ["뉴스", "소식", "기사", "보도", "속보", "최신"]
 
-    # 4) 한 가지라도 들어있으면 뉴스 검색 로직으로 분기
+    # 제거할 불필요 단어들의 리스트
+    remove_words = [
+        "뉴스", "소식", "기사", "보도", "속보",
+        "에 대해 알려줘", "에 대해", "대해", "알려줘",
+        "알려주세요", "알려주시겠어요", "알려달라",
+        "찾아줘", "검색해줘", "보여줘"
+    ]
+
+    # 뉴스 검색 로직으로 분기
     if any(word in temp_query for word in news_indicators):
         # 불필요 단어들 제거 → 핵심 키워드만 추출
-        keyword = (
-            temp_query
-            .replace("뉴스", "")
-            .replace("소식", "")
-            .replace("기사", "")
-            .replace("보도", "")
-            .replace("속보", "")
-            .replace("에 대해 알려줘", "")
-            .strip()
-        )
+        keyword = temp_query
+        for word in remove_words:
+            keyword = keyword.replace(word, "")
+        
+        # 앞뒤 공백 제거 및 중복 공백 제거
+        keyword = " ".join(keyword.split())
 
         # 네이버 뉴스 검색
         news_results = search_news(keyword)
@@ -290,7 +293,7 @@ async def chatbot_endpoint(request: QueryRequest):
         formatted_results = format_news_results(news_results)
         return {"response": formatted_results}
 
-    # 5) 뉴스 키워드가 없으면 일반 ChatGPT 응답
+    # 뉴스 키워드가 없으면 일반 ChatGPT 응답
     return {"response": generate_response(user_query)}
 
 
